@@ -1,0 +1,8 @@
+edge/
+.token
+.repo
+migrations/
+publicar.sh
+*.py
+*.md
+.DS_Store

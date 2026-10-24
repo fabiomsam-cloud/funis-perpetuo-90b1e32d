@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Funis do Perpétuo</title>
+<style>
+:root{--fundo:#E9EDF2;--tinta:#23344F;--azul:#1B3A66;--borda:#AEBBCB;--suave:#5A6678;--alerta:#B4532A;--verde:#2F7D62;--amarelo:#B7861F;--lilas:#5B4B8A}
+*{box-sizing:border-box;margin:0}
+body{background:var(--fundo);color:var(--tinta);font-family:'DejaVu Sans',Verdana,-apple-system,sans-serif;padding:16px}
+.wrap{max-width:1280px;margin:0 auto}
+.barra{position:sticky;top:0;z-index:5;background:var(--fundo);padding:8px 0 10px;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.barra h1{font-size:1.25rem;font-weight:800;color:#1B2B45;margin-right:auto}
+.abas{display:flex;gap:4px;flex-wrap:wrap}
+.abas button,.btn,select,input[type=date],input[type=number],input[type=text]{font:inherit;font-size:.82rem;border:1px solid var(--borda);background:#fff;color:var(--tinta);border-radius:999px;padding:6px 12px;cursor:pointer}
+input[type=date],input[type=number],input[type=text],select{border-radius:8px;padding:5px 8px;cursor:auto}
+.abas button.on{background:var(--azul);color:#fff;border-color:var(--azul)}
+.btn.prim{background:var(--azul);color:#fff;border-color:var(--azul)}
+.btn.peq{font-size:.72rem;padding:3px 9px}
+.filtros{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:.78rem}
+.filtros label{display:flex;gap:5px;align-items:center;color:var(--suave)}
+.status{font-size:.8rem;color:var(--suave);margin:0 0 12px}
+.status b{color:var(--tinta)} .status .aviso{color:var(--alerta);font-weight:700}
+.folha{background:#fff;border-radius:10px;padding:20px 22px 16px;margin-bottom:16px}
+.folha h3{font-size:1.25rem;font-weight:800;margin-bottom:4px;color:#1B2B45;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.folha h3 small{font-size:.78rem;font-weight:400;color:var(--suave)}
+.folha .sub{font-size:.92rem;font-weight:800;margin-top:16px;color:#1B2B45}
+.folha .sub small{font-weight:400;color:var(--suave)}
+.tw{overflow-x:auto;margin-top:8px}
+table{border-collapse:collapse;width:100%;font-size:.78rem;border:1px solid var(--borda)}
+th{background:var(--azul);color:#fff;text-align:center;padding:5px 5px;font-weight:700;line-height:1.2;white-space:nowrap}
+th:first-child{text-align:left;padding-left:10px}
+th small{display:block;font-weight:400;font-size:.68rem;opacity:.9}
+td{padding:3px 6px;border-bottom:1px solid var(--borda);border-left:1px solid var(--borda);text-align:center;color:#10233F;white-space:nowrap;height:22px}
+td.lab{text-align:left;background:#F4F6F9;color:var(--tinta);font-weight:700}
+td.esq{text-align:left;white-space:normal}
+tr.tot td{font-weight:800;background:#E6EEF7}
+tr.sem td{opacity:.55}
+td.neg{color:var(--alerta);font-weight:700} td.pos{color:var(--verde);font-weight:700} td.amar{color:var(--amarelo);font-weight:700}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:10px}
+.kpi{border:1px solid var(--borda);border-radius:8px;padding:8px 10px}
+.kpi .v{font-size:1.25rem;font-weight:800;color:#1B2B45} .kpi .l{font-size:.7rem;color:var(--suave)} .kpi .s{font-size:.72rem;color:var(--suave)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:14px}
+.pill{display:inline-block;border-radius:999px;padding:1px 8px;font-size:.68rem;font-weight:700;margin:0 2px}
+.pill.ok{background:#DDF1E7;color:#1F6B4E} .pill.off{background:#EEF0F3;color:#8A94A3} .pill.al{background:#FBE7DE;color:#9A4221} .pill.man{background:#E7E1F5;color:#4C3C80}
+.funil{border:1px solid var(--borda);border-radius:8px;padding:10px 12px;margin-top:10px}
+.funil h4{font-size:.9rem;font-weight:800;color:#1B2B45;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.funil h4 small{font-weight:400;color:var(--suave);font-size:.72rem}
+.degraus{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;align-items:stretch}
+.deg{min-width:96px;flex:1;border-radius:6px;background:#F4F6F9;padding:6px 8px;position:relative}
+.deg .n{font-size:1.05rem;font-weight:800;color:#1B2B45} .deg .t{font-size:.66rem;color:var(--suave);line-height:1.2} .deg .c{font-size:.66rem;color:var(--lilas);font-weight:700}
+.deg.mat{background:#DDF1E7} .deg.neg{background:#FFF4D6}
+.form{font-size:.68rem;color:var(--suave);margin-top:8px;line-height:1.5}
+.vazio{background:#fff;border-radius:10px;padding:30px;text-align:center;color:var(--suave)}
+.linha{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px;font-size:.8rem}
+.msg{font-size:.78rem;color:var(--verde);font-weight:700}
+.bar{height:8px;background:#E6EEF7;border-radius:4px;overflow:hidden;min-width:80px}
+.bar i{display:block;height:100%;background:var(--azul)}
+@media (max-width:700px){body{padding:10px}.folha{padding:14px 12px}.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="barra">
+    <h1>Funis do Perpétuo</h1>
+    <div class="abas" id="abas">
+      <button data-a="geral" class="on">Visão geral</button><button data-a="mentoria">Mentoria</button><button data-a="coortes">Coortes</button>
+      <button data-a="campanhas">Campanhas</button><button data-a="filas">Filas</button><button data-a="config">Config</button>
+    </div>
+    <div class="filtros">
+      <label>Período <select id="preset">
+        <option value="mes">Mês atual</option><option value="mesant">Mês anterior</option><option value="base">Base set+out</option>
+        <option value="7d">Últimos 7 dias</option><option value="30d">Últimos 30 dias</option><option value="custom">Personalizado</option></select></label>
+      <label>de <input type="date" id="ini"></label><label>até <input type="date" id="fim"></label>
+      <label id="lMent">Conta <select id="ment"></select></label>
+      <button class="btn" id="ir">Atualizar</button>
+    </div>
+  </div>
+  <div class="status" id="status">Carregando…</div>
+  <div id="corpo"></div>
+</div>
+<script>
+const API = "https://dqpxugdhlgafvddavzzp.supabase.co/functions/v1/dashboard-funis";
+const K = new URLSearchParams(location.search).get("k") || "";
+const $ = id => document.getElementById(id);
+const esc = s => String(s??"").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const nf = (v,c=0) => (v==null||!isFinite(v)) ? "—" : Number(v).toLocaleString("pt-BR",{minimumFractionDigits:c,maximumFractionDigits:c});
+const R = (v,c=0) => (v==null||!isFinite(v)||v===0&&c===0&&false) ? "—" : "R$ "+nf(v,c);
+const X = v => (v==null||!isFinite(v)) ? "—" : nf(v,2)+"×";
+const P = (a,b) => (!b) ? "—" : nf(100*a/b,1)+"%";
+const ddmm = d => d ? d.slice(8,10)+"/"+d.slice(5,7) : "";
+const dhm = s => s ? s.slice(8,10)+"/"+s.slice(5,7)+" "+s.slice(11,16) : "";
+const hojeManaus = () => new Date(Date.now() - 4*3600e3).toISOString().slice(0,10);
+const addDia = (d,n) => { const x = new Date(d+"T12:00:00Z"); x.setUTCDate(x.getUTCDate()+n); return x.toISOString().slice(0,10); };
+const FUNIL_NOME = {webinario:"Webinário", blindado:"Blindado", carrinho:"Carrinho abandonado", desconto:"Agente de desconto", nutricao:"Nutrição", organico:"Orgânico / isca", lowticket:"Low ticket (ingresso)", disparo:"Disparo · Anne vendedora", hubla:"Hubla (checkout direto)", outros:"Outros", direto:"Direto (sem evento em 7 dias)", captacao:"Captação (isca paga)", topo:"Topo (atração/corredor)", lancamento:"Lançamento", fora:"Fora das contas", black:"Black"};
+const EV_NOME = {cadastro:"Cadastro", entrou:"Entrou na sala", pitch:"Chegou à oferta", clicou_checkout:"Clicou no botão", regua_enviada:"Régua enviada", controle:"Grupo de controle", clique_blindado:"Clicou p/ matricular (pop-up)", carrinho_abandonado:"Carrinho abandonado", checkout_aberto:"Checkout aberto", disparo_enviado:"Disparo enviado", roteado:"Roteado p/ agente", respondeu:"Respondeu", escalado_humano:"Escalado p/ humano", link_enviado:"Link enviado", venda_anne:"Venda confirmada (Anne)", matricula:"Matrícula", reembolso:"Reembolso", isca_cadastro:"Cadastro na isca", grupo_entrou:"Entrou no grupo", jev_classe:"Classe Jev"};
+const EV_ORDEM = ["disparo_enviado","regua_enviada","controle","cadastro","isca_cadastro","roteado","entrou","grupo_entrou","pitch","respondeu","jev_classe","clicou_checkout","clique_blindado","escalado_humano","carrinho_abandonado","checkout_aberto","link_enviado","venda_anne","matricula","reembolso"];
+const FUNIL_ORDEM = ["webinario","blindado","carrinho","desconto","disparo","nutricao","organico","lowticket","hubla","outros"];
+const SEQ = {webinario:["cadastro","entrou","pitch","clicou_checkout","link_enviado"], blindado:["clique_blindado","regua_enviada","link_enviado"], carrinho:["carrinho_abandonado","regua_enviada","link_enviado"],
+  desconto:["disparo_enviado","respondeu","link_enviado"], disparo:["disparo_enviado","respondeu","link_enviado","escalado_humano"], nutricao:["disparo_enviado","isca_cadastro","grupo_entrou","respondeu","link_enviado"],
+  organico:["isca_cadastro","grupo_entrou","respondeu","link_enviado"], lowticket:["regua_enviada","respondeu","link_enviado"], hubla:["checkout_aberto"], outros:["disparo_enviado","respondeu","link_enviado"]};
+const TIPO_FILA = {lead_novo:"Lead novo sem 1º toque", carrinho:"Carrinho sem toque", negociacao:"Negociação parada (sem pagamento)", classe_a:"Classe A parada há 48 h"};
+let ABA = "geral", MENTORIAS = [], CACHE = {};
+
+async function api(v, extra){ const r = await fetch(API+"?k="+encodeURIComponent(K)+"&v="+v+(extra||"")); const j = await r.json(); if(!r.ok) throw new Error(j.error||r.status); return j; }
+async function post(body){ const r = await fetch(API+"?k="+encodeURIComponent(K), {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body)}); const j = await r.json(); if(!r.ok) throw new Error(j.error||r.status); return j; }
+const periodo = () => "&ini="+$("ini").value+"&fim="+$("fim").value;
+
+function aplicarPreset(){
+  const h = hojeManaus(), ontem = addDia(h,-1), p = $("preset").value;
+  if(p==="mes"){ $("ini").value = h.slice(0,8)+"01"; $("fim").value = ontem < h.slice(0,8)+"01" ? h : ontem; }
+  else if(p==="mesant"){ const m1 = addDia(h.slice(0,8)+"01",-1); $("ini").value = m1.slice(0,8)+"01"; $("fim").value = m1; }
+  else if(p==="base"){ $("ini").value = "2026-09-01"; $("fim").value = ontem; }
+  else if(p==="7d"){ $("ini").value = addDia(h,-7); $("fim").value = ontem; }
+  else if(p==="30d"){ $("ini").value = addDia(h,-30); $("fim").value = ontem; }
+}
+$("preset").onchange = () => { aplicarPreset(); carregar(); };
+$("ini").onchange = $("fim").onchange = () => { $("preset").value = "custom"; };
+$("ir").onclick = () => { CACHE = {}; carregar(); };
+$("ment").onchange = () => carregar();
+$("abas").onclick = e => { const b = e.target.closest("button"); if(!b) return; ABA = b.dataset.a; [...$("abas").children].forEach(x => x.classList.toggle("on", x===b)); carregar(); };
+
+async function iniciar(){
+  if(!K){ $("status").innerHTML = '<span class="aviso">Falta o token no link (?k=…).</span>'; return; }
+  aplicarPreset();
+  const h = location.hash.slice(1); if(["geral","mentoria","coortes","campanhas","filas","config"].includes(h)){ ABA = h; [...$("abas").children].forEach(x => x.classList.toggle("on", x.dataset.a===h)); }
+  carregar();
+}
+
+async function carregar(){
+  history.replaceState(null, "", location.search + "#" + ABA);
+  $("lMent").style.display = (ABA==="mentoria"||ABA==="coortes") ? "" : "none";
+  $("status").textContent = "Carregando…";
+  try {
+    if(ABA==="geral") await vGeral();
+    else if(ABA==="mentoria") await vMentoria();
+    else if(ABA==="coortes") await vCoortes();
+    else if(ABA==="campanhas") await vCampanhas();
+    else if(ABA==="filas") await vFilas();
+    else if(ABA==="config") await vConfig();
+  } catch(e){ $("status").innerHTML = '<span class="aviso">Erro: '+esc(e.message)+'</span>'; $("corpo").innerHTML = ""; }
+}
+function mentoriasSelect(lista){
+  MENTORIAS = lista; const s = $("ment"); const atual = s.value;
+  s.innerHTML = lista.map(m => `<option value="${m.mentoria||m.codigo}">${esc(m.nome)}</option>`).join("");
+  if(lista.some(m => (m.mentoria||m.codigo)===atual)) s.value = atual;
+}
+function statusPeriodo(j, extra){
+  $("status").innerHTML = `Período <b>${ddmm(j.ini)} → ${ddmm(j.fim)}</b>` + (j.atualizado ? ` · eventos até <b>${esc(dhm(j.atualizado))}</b>` : "") + (extra||"");
+}
+
+// ---------------------------------------------------------------- Visão geral
+async function vGeral(){
+  const j = await api("resumo", periodo());
+  mentoriasSelect(j.mentorias);
+  const eb = j.excluido_black || {};
+  statusPeriodo(j, ` · Black excluída: ${eb.vendas||0} vendas, ${R(eb.receita)} de receita, ${R(eb.gasto)} de custo`);
+  const ativas = j.mentorias.filter(m => m.meta_habilitada);
+  const tot = {};
+  for (const k of ["leads","oportunidades","negociacoes","matriculas","matriculas_especial","reembolsos","receita_1a","gasto_funil","gasto_mentoria","fechamento_anne","fechamento_humano","fechamento_sozinho","meta_matriculas"]) tot[k] = ativas.reduce((a,m)=>a+(+m[k]||0),0);
+  const linha = (m, isTot) => {
+    const s = m.sugestao||{};
+    const meta = isTot ? (tot.meta_matriculas ? nf(tot.meta_matriculas) : "—") : (m.meta_matriculas!=null ? nf(m.meta_matriculas) : '<span class="pill off">sem meta</span>');
+    const sug = isTot ? "" : (s.sugestao!=null ? `${nf(s.sugestao)} <small style="color:#5A6678">(${s.fonte_verba==="plano"?"plano":"gasto 30d"})</small>` : "—");
+    const alvo = m.meta_matriculas!=null ? m.meta_matriculas : (s.sugestao!=null ? s.sugestao : null);
+    const cls = alvo==null ? "" : (m.matriculas >= alvo ? "pos" : (m.matriculas >= 0.8*alvo ? "amar" : "neg"));
+    const est = isTot ? "" : (!m.meta_habilitada ? '<span class="pill off">conta nova</span>' :
+      (m.estrutura.webinario||m.estrutura.captacao||m.estrutura.topo ? "" : '<span class="pill al">sem funil de topo</span>') +
+      ['webinario','blindado','captacao','topo'].map(f => `<span class="pill ${m.estrutura[f]?'ok':'off'}">${({webinario:'WEB',blindado:'BLIND',captacao:'CAPT',topo:'TOPO'})[f]}</span>`).join(""));
+    return `<tr class="${isTot?'tot':(m.meta_habilitada?'':'sem')}">
+      <td class="lab">${isTot ? 'Total (contas com meta)' : `<a href="#mentoria" onclick="irMentoria('${m.mentoria}');return false" style="color:inherit">${esc(m.nome)}</a>`}</td>
+      <td>${meta}</td><td>${sug}</td>
+      <td class="${cls}">${nf(m.matriculas)}${m.matriculas_especial?` <small>+${m.matriculas_especial} esp.</small>`:""}${m.reembolsos?` <small style="color:#B4532A">−${m.reembolsos} reemb.</small>`:""}</td>
+      <td>${R(m.receita_1a)}</td>
+      <td>${R(m.gasto_funil)} / ${R(m.gasto_mentoria)}</td>
+      <td>${isTot ? (tot.matriculas? R(tot.gasto_funil/tot.matriculas)+" / "+R(tot.gasto_mentoria/tot.matriculas) : "—") : (m.matriculas&&m.gasto_mentoria ? R(m.cpa_funil)+" / "+R(m.cpa_mentoria) : "—")}</td>
+      <td>${isTot ? X(tot.gasto_mentoria? tot.receita_1a/tot.gasto_mentoria : null) : X(m.roas)}</td>
+      <td>${nf(m.leads)} → ${nf(m.oportunidades)} → ${nf(m.negociacoes)} → ${nf(m.matriculas)}<br><small>${P(m.oportunidades,m.leads)} · ${P(m.negociacoes,m.oportunidades)} · ${P(m.matriculas,m.negociacoes)}</small></td>
+      <td>${nf(m.fechamento_anne)} / ${nf(m.fechamento_humano)} / ${nf(m.fechamento_sozinho)}</td>
+      <td class="esq">${est}</td></tr>`;
+  };
+  $("corpo").innerHTML = `<div class="folha"><h3>As 9 contas <small>matrículas = 1ª parcela paga, sem reembolso, sem Black · custo = Meta × 1,1383</small></h3>
+    <div class="tw"><table><tr><th>Conta</th><th>Meta<small>fixada</small></th><th>Sugestão<small>verba ÷ CPA base</small></th><th>Matrículas</th><th>Receita<small>1ª parcela líq.</small></th>
+    <th>Gasto<small>funil / mentoria</small></th><th>Custo por aluno<small>funil / mentoria</small></th><th>ROAS</th><th>Leads → Oport. → Negoc. → Matr.<small>conversão entre etapas</small></th><th>Fechamento<small>Anne / humano / sozinho</small></th><th>Estrutura</th></tr>
+    ${j.mentorias.map(m => linha(m,false)).join("")}${linha(tot,true)}</table></div>
+    <div class="form">Lead = pessoa com telefone que entrou por cadastro, clique, carrinho, isca ou disparo no período · Oportunidade = conversou com necessidade ou clicou para matricular · Negociação = link enviado, checkout aberto, carrinho ou data combinada · Especial = venda em janela de lançamento/ação (fora da taxa base) · "sem funil de topo" = sem webinário, captação nem atração no período.</div>
+    ${j.periodos.length ? `<div class="form">Períodos especiais no intervalo: ${j.periodos.map(p => esc((p.mentoria||'todas')+' · '+p.tipo+' '+ddmm(p.ini)+'→'+ddmm(p.fim)+' · '+(p.descricao||''))).join(" | ")}</div>` : ""}
+  </div>`;
+}
+function irMentoria(m){ ABA = "mentoria"; [...$("abas").children].forEach(x => x.classList.toggle("on", x.dataset.a==="mentoria")); $("ment").value = m; carregar(); }
+
+// ---------------------------------------------------------------- Mentoria
+async function vMentoria(){
+  if(!MENTORIAS.length){ const c = await api("config"); mentoriasSelect(c.mentorias); }
+  const m = $("ment").value || "TJAM";
+  const j = await api("mentoria", periodo()+"&m="+m);
+  statusPeriodo(j);
+  const r = j.resumo || {}, s = j.sugestao || {};
+  const porFunil = {};
+  for (const e of j.etapas){ (porFunil[e.funil] = porFunil[e.funil] || []).push(e); }
+  const vf = Object.fromEntries(j.vendas_funil.map(v => [v.funil_conversao, v]));
+  const ctl = {}; for (const c of j.controle){ (ctl[c.funil] = ctl[c.funil] || {})[c.grupo] = c; }
+  const funis = FUNIL_ORDEM.filter(f => porFunil[f] || vf[f]).concat(Object.keys(porFunil).filter(f => !FUNIL_ORDEM.includes(f)));
+  const cardFunil = f => {
+    const todos = (porFunil[f]||[]).filter(e => !["matricula","reembolso","jev_classe"].includes(e.event_type));
+    const seq = (SEQ[f]||[]).map(t => todos.find(e => e.event_type===t)).filter(Boolean);
+    const resto = todos.filter(e => !seq.includes(e)).sort((a,b)=>EV_ORDEM.indexOf(a.event_type)-EV_ORDEM.indexOf(b.event_type));
+    const jev = (porFunil[f]||[]).filter(e => e.event_type==="jev_classe");
+    const v = vf[f]; const c = ctl[f];
+    const degs = seq.map((e,i) => { const ant = seq[i-1]; return `<div class="deg ${e.etapa==='negociacao'?'neg':''}"><div class="n">${nf(e.pessoas)}</div><div class="t">${esc(EV_NOME[e.event_type]||e.event_type)}</div>${ant?`<div class="c">${P(e.pessoas,ant.pessoas)}</div>`:""}</div>`; }).join("");
+    const ult = seq[seq.length-1];
+    const mat = v ? `<div class="deg mat"><div class="n">${nf(v.n)}</div><div class="t">Matrículas fechadas por este funil</div><div class="c">${ult?P(v.n,ult.pessoas)+" do degrau anterior · ":""}${R(v.liq)} · Anne ${v.anne} · humano ${v.humano} · sozinho ${v.sozinho}${v.dias_medio!=null?` · ${v.dias_medio} d`:""}</div></div>` : `<div class="deg mat"><div class="n">0</div><div class="t">Matrículas fechadas por este funil</div></div>`;
+    const ctlTxt = c ? `<small>Régua: ${c.regua_enviada?nf(c.regua_enviada.pessoas)+" pessoas · "+P(c.regua_enviada.compraram,c.regua_enviada.pessoas)+" compraram em 14 d":"—"} · Controle: ${c.controle?nf(c.controle.pessoas)+" · "+P(c.controle.compraram,c.controle.pessoas):"sem grupo de controle no período"}</small>` : "";
+    const jevTxt = jev.length ? `<small>Jev: ${jev.map(x => (x.etapa==='perfil'?'A/B ':'C/D ')+nf(x.pessoas)).join(" · ")}</small>` : "";
+    const restoTxt = resto.length ? `<div class="form">Outros toques: ${resto.map(e => esc(EV_NOME[e.event_type]||e.event_type)+" "+nf(e.pessoas)).join(" · ")}</div>` : "";
+    return `<div class="funil"><h4>${esc(FUNIL_NOME[f]||f)} ${ctlTxt}${jevTxt}</h4><div class="degraus">${degs}${mat}</div>${restoTxt}</div>`;
+  };
+  const serie = j.serie || [];
+  $("corpo").innerHTML = `<div class="folha"><h3>${esc(j.mentoria.nome)} <small>${r.meta_habilitada===false?'conta sem meta':''}</small></h3>
+    <div class="kpis">
+      <div class="kpi"><div class="v">${nf(r.matriculas)}</div><div class="l">matrículas</div><div class="s">meta ${r.meta_matriculas!=null?nf(r.meta_matriculas):"não fixada"} · sugestão ${s.sugestao!=null?nf(s.sugestao):"—"} (CPA base ${R(s.cpa_base)} · verba ${R(s.verba)} ${s.fonte_verba==='plano'?'do plano':'= gasto 30 d'})</div></div>
+      <div class="kpi"><div class="v">${R(r.receita_1a)}</div><div class="l">receita 1ª parcela</div><div class="s">${r.reembolsos?`${r.reembolsos} reembolsos (${R(r.reembolsos_valor)})`:"sem reembolso"}${r.matriculas_especial?` · ${r.matriculas_especial} em período especial`:""}</div></div>
+      <div class="kpi"><div class="v">${R(r.gasto_mentoria)}</div><div class="l">gasto da mentoria (c/ imposto)</div><div class="s">funil ${R(r.gasto_funil)} · topo ${R((r.gasto_mentoria||0)-(r.gasto_funil||0))}</div></div>
+      <div class="kpi"><div class="v">${r.matriculas&&r.gasto_mentoria?R(r.cpa_mentoria):"—"}</div><div class="l">custo por aluno (mentoria)</div><div class="s">funil ${r.matriculas&&r.gasto_funil?R(r.cpa_funil):"—"} · ROAS ${X(r.roas)}</div></div>
+      <div class="kpi"><div class="v">${nf(r.leads)} → ${nf(r.oportunidades)} → ${nf(r.negociacoes)}</div><div class="l">leads → oportunidades → negociações</div><div class="s">${P(r.oportunidades,r.leads)} · ${P(r.negociacoes,r.oportunidades)} · ${P(r.matriculas,r.negociacoes)} viram matrícula</div></div>
+      <div class="kpi"><div class="v">${nf(r.fechamento_anne)} / ${nf(r.fechamento_humano)} / ${nf(r.fechamento_sozinho)}</div><div class="l">fechamento Anne / humano / sozinho</div><div class="s">perfil (Jev A/B): ${nf(r.perfil)}</div></div>
+    </div>
+    <div class="sub">Funil a funil <small>pessoas distintas no período · % = conversão sobre o degrau anterior · matrículas pelo último evento em 7 dias</small></div>
+    ${funis.map(cardFunil).join("")}
+    ${vf.direto ? `<div class="form">Vendas sem evento rastreável nos 7 dias antes do pagamento ("direto"): <b>${vf.direto.n}</b> (${R(vf.direto.liq)}).</div>` : ""}
+    <div class="grid2">
+      <div><div class="sub">Origem do lead (1º toque)</div><div class="tw"><table><tr><th>Canal</th><th>Matrículas</th><th>Receita</th></tr>${j.origem.map(o => `<tr><td class="lab">${esc(o.canal)}</td><td>${nf(o.n)}</td><td>${R(o.liq)}</td></tr>`).join("")}</table></div></div>
+      <div><div class="sub">Campanhas da conta no período</div><div class="tw"><table><tr><th>Campanha</th><th>Funil</th><th>Gasto</th><th>Cliques</th></tr>${(j.campanhas||[]).map(c => `<tr><td class="esq">${esc(c.campaign_name)}${c.fonte==='manual'?' <span class="pill man">manual</span>':''}</td><td>${esc(c.funil)}</td><td>${R(c.gasto)}</td><td>${nf(c.cliques)}</td></tr>`).join("")||'<tr><td colspan=4>sem campanha no período</td></tr>'}</table></div></div>
+    </div>
+    <div class="sub">Dia a dia</div>
+    <div class="tw"><table><tr><th>Dia</th><th>Leads</th><th>Oportunidades</th><th>Matrículas</th><th>Receita</th><th>Gasto</th></tr>
+      ${serie.map(d => `<tr><td class="lab">${ddmm(d.dia)}</td><td>${nf(d.leads)}</td><td>${nf(d.oportunidades)}</td><td>${nf(d.matriculas)}</td><td>${R(d.receita)}</td><td>${R(d.gasto)}</td></tr>`).join("")}</table></div>
+  </div>`;
+  CACHE.coortes = {m, data: j};
+}
+
+// ---------------------------------------------------------------- Coortes
+async function vCoortes(){
+  if(!MENTORIAS.length){ const c = await api("config"); mentoriasSelect(c.mentorias); }
+  const m = $("ment").value || "TJAM";
+  const j = (CACHE.coortes && CACHE.coortes.m===m && CACHE.coortes.data.ini===$("ini").value && CACHE.coortes.data.fim===$("fim").value) ? CACHE.coortes.data : await api("mentoria", periodo()+"&m="+m);
+  statusPeriodo(j, " · coortes começam 8 semanas antes do período");
+  const hoje = hojeManaus();
+  const cel = (c, n, dias) => { const madura = addDia(c.semana, 7+dias) <= hoje; return `<td class="${madura?'':'amar'}">${nf(n)} <small>${P(n,c.entradas)}</small></td>`; };
+  $("corpo").innerHTML = `<div class="folha"><h3>Coortes · ${esc(j.mentoria.nome)} <small>semana de entrada no funil (1º evento rastreado) · amarelo = janela ainda não fechou</small></h3>
+    <div class="tw"><table><tr><th>Semana</th><th>Entradas</th><th>7 dias</th><th>14 dias</th><th>30 dias</th><th>60 dias</th><th>90 dias</th><th>Receita (90 d)</th></tr>
+    ${j.coortes.map(c => `<tr><td class="lab">${ddmm(c.semana)}</td><td>${nf(c.entradas)}</td>${cel(c,c.m7,7)}${cel(c,c.m14,14)}${cel(c,c.m30,30)}${cel(c,c.m60,60)}${cel(c,c.m90,90)}<td>${R(c.receita_1a)}</td></tr>`).join("")}</table></div>
+    <div class="form">Entrada = primeira vez que a pessoa aparece em qualquer evento da conta (cadastro, isca, clique, disparo…). A matrícula conta na coorte da entrada, mesmo que tenha sido paga meses depois.</div></div>`;
+}
+
+// ---------------------------------------------------------------- Campanhas
+async function vCampanhas(){
+  const j = await api("campanhas", "&ini="+addDia(hojeManaus(),-60));
+  mentoriasSelect(j.mentorias.map(m => ({mentoria:m.codigo, nome:m.nome})));
+  $("status").innerHTML = `Campanhas com gasto nos últimos 60 dias · Black: ${j.black.n} campanhas, ${R(j.black.gasto)} (fora de tudo) · Fora das contas (Play Passei, SEDUC-PA, ManausPrev…): ${j.fora.n}, ${R(j.fora.gasto)}`;
+  const opM = sel => `<option value="">— sem conta —</option>`+j.mentorias.map(m => `<option value="${m.codigo}" ${sel===m.codigo?'selected':''}>${esc(m.nome)}</option>`).join("");
+  const opF = sel => j.funis.map(f => `<option value="${f}" ${sel===f?'selected':''}>${f}</option>`).join("");
+  const linha = c => `<tr data-id="${esc(c.campaign_id)}"><td class="esq">${esc(c.campaign_name)}<br><small>${esc(c.ad_account_name||'')} · ${ddmm(c.primeiro_dia)}→${ddmm(c.ultimo_dia)}</small></td>
+    <td>${R(c.gasto_total||c.gasto)}</td><td><select class="cM">${opM(c.mentoria)}</select></td><td><select class="cF">${opF(c.funil)}</select></td>
+    <td>${c.fonte==='manual'?'<span class="pill man">manual</span>':'<span class="pill ok">regra</span>'}</td>
+    <td><button class="btn peq" onclick="salvarCamp(this)">Salvar</button> ${c.fonte==='manual'?`<button class="btn peq" onclick="regraCamp(this)">Voltar à regra</button>`:''}</td></tr>`;
+  $("corpo").innerHTML = `<div class="folha"><h3>Não classificadas <small>sem conta ou com funil "outros": corrija aqui (vira exceção manual) ou renomeie a campanha na Meta com [FUNIL][CONTA]</small></h3>
+      <div class="tw"><table><tr><th>Campanha</th><th>Gasto</th><th>Conta</th><th>Funil</th><th>Fonte</th><th></th></tr>${j.pendentes.map(linha).join("")||'<tr><td colspan=6>nenhuma pendente</td></tr>'}</table></div></div>
+    <div class="folha"><h3>Classificadas <small>regra de nome: [WEB][TJAM], [BLIND][SEDUCAM], [PLANO][FASE1][PRF]…</small></h3>
+      <div class="tw"><table><tr><th>Campanha</th><th>Gasto</th><th>Conta</th><th>Funil</th><th>Fonte</th><th></th></tr>${j.classificadas.map(linha).join("")}</table></div></div>`;
+}
+async function salvarCamp(b){ const tr = b.closest("tr"); b.disabled = true; try { await post({acao:"campanha", campaign_id: tr.dataset.id, mentoria: tr.querySelector(".cM").value, funil: tr.querySelector(".cF").value}); b.textContent = "Salvo"; setTimeout(vCampanhas, 600); } catch(e){ alert(e.message); b.disabled=false; } }
+async function regraCamp(b){ const tr = b.closest("tr"); b.disabled = true; try { await post({acao:"campanha_regra", campaign_id: tr.dataset.id}); setTimeout(vCampanhas, 600); } catch(e){ alert(e.message); b.disabled=false; } }
+
+// ---------------------------------------------------------------- Filas
+async function vFilas(){
+  const j = await api("filas");
+  if(!MENTORIAS.length){ const c = await api("config"); mentoriasSelect(c.mentorias); }
+  $("status").innerHTML = `Filas calculadas agora (${esc(dhm(j.gerado_em))}) com os prazos da aba Config · v1: só o que o Data Core enxerga; "mensagem do lead sem resposta" entra na Fase 2 com o espelho de mensagens da Anne`;
+  const tipos = Object.keys(TIPO_FILA);
+  const mapa = {}; for (const r of j.resumo){ (mapa[r.mentoria] = mapa[r.mentoria] || {})[r.tipo] = r.n; }
+  const contas = MENTORIAS.map(m => m.mentoria||m.codigo).filter(c => mapa[c]);
+  const nome = c => (MENTORIAS.find(m => (m.mentoria||m.codigo)===c)||{}).nome || c;
+  const tot = t => contas.reduce((a,c)=>a+(mapa[c][t]||0),0);
+  const filtro = (document.getElementById("fTipo")||{}).value || "";
+  $("corpo").innerHTML = `<div class="folha"><h3>Leads esquecidos por conta</h3>
+    <div class="tw"><table><tr><th>Conta</th>${tipos.map(t => `<th>${TIPO_FILA[t]}</th>`).join("")}</tr>
+    ${contas.map(c => `<tr><td class="lab">${esc(nome(c))}</td>${tipos.map(t => `<td class="${(mapa[c][t]||0)>0?'neg':''}">${nf(mapa[c][t]||0)}</td>`).join("")}</tr>`).join("")}
+    <tr class="tot"><td class="lab">Total</td>${tipos.map(t => `<td>${nf(tot(t))}</td>`).join("")}</tr></table></div>
+    <div class="linha">Mostrar: <select id="fTipo" onchange="vFilas()"><option value="">todas as filas</option>${tipos.map(t => `<option value="${t}" ${filtro===t?'selected':''}>${TIPO_FILA[t]}</option>`).join("")}</select> <span style="color:#5A6678">(400 mais antigos)</span></div>
+    <div class="tw"><table><tr><th>Fila</th><th>Conta</th><th>Funil</th><th>Telefone</th><th>Desde</th><th>Horas parado</th></tr>
+    ${j.itens.filter(i => !filtro || i.tipo===filtro).map(i => `<tr><td class="esq">${TIPO_FILA[i.tipo]||i.tipo}</td><td>${esc(nome(i.mentoria))}</td><td>${esc(FUNIL_NOME[i.funil]||i.funil)}</td><td>${esc(i.tel)}</td><td>${esc(dhm(i.desde))}</td><td class="${i.horas>48?'neg':''}">${nf(i.horas)}</td></tr>`).join("")}</table></div>
+    <div class="form">Lead novo = cadastro/isca/clique sem nenhum toque da Anne depois · Carrinho = evento da Hubla sem régua nem resposta · Negociação = link, checkout aberto ou carrinho sem pagamento e sem qualquer evento depois · Classe A = Jev A sem evento há 48 h. Telefone mascarado; a conversa abre no inbox da Anne pelo número.</div></div>`;
+}
+
+// ---------------------------------------------------------------- Config
+async function vConfig(){
+  const j = await api("config");
+  mentoriasSelect(j.mentorias);
+  $("status").innerHTML = `Reprocessamento automático: ${esc(j.cron?.schedule||"?")} (último ${esc(dhm(j.cron?.ultimo))}) <button class="btn peq" onclick="refreshAgora(this)">Reprocessar agora</button>`;
+  const h = hojeManaus(); const meses = [0,1,2].map(i => { const d = new Date(h.slice(0,7)+"-01T12:00:00Z"); d.setUTCMonth(d.getUTCMonth()+i); return d.toISOString().slice(0,10); });
+  const meta = (m, mes) => j.metas.find(x => x.mentoria===m && x.mes===mes) || {};
+  $("corpo").innerHTML = `<div class="folha"><h3>Metas de matrículas <small>por conta e mês · verba prevista opcional (sem ela a sugestão usa o gasto real dos últimos 30 dias)</small></h3>
+    <div class="tw"><table><tr><th>Conta</th>${meses.map(x => `<th>${x.slice(5,7)}/${x.slice(0,4)}<small>meta · verba (R$)</small></th>`).join("")}</tr>
+    ${j.mentorias.map(m => `<tr><td class="lab">${esc(m.nome)}${m.meta_habilitada?'':' <span class="pill off">sem meta</span>'}</td>${meses.map(x => { const k = meta(m.codigo,x); return `<td><input type="number" style="width:70px" value="${k.meta_matriculas??''}" data-m="${m.codigo}" data-mes="${x}" class="iMeta"> <input type="number" style="width:95px" value="${k.verba_prevista??''}" data-m="${m.codigo}" data-mes="${x}" class="iVerba"> <button class="btn peq" onclick="salvarMeta(this)">ok</button></td>`; }).join("")}</tr>`).join("")}</table></div></div>
+  <div class="folha"><h3>Períodos especiais <small>janelas de lançamento, ação de 1 dia e Black — a venda ganha a etiqueta e sai da taxa base</small></h3>
+    <div class="tw"><table><tr><th>Conta</th><th>Tipo</th><th>De</th><th>Até</th><th>Descrição</th><th></th></tr>
+    ${j.periodos.map(p => `<tr><td>${esc(p.mentoria||'todas')}</td><td>${esc(p.tipo)}</td><td>${ddmm(p.ini)}/${p.ini.slice(0,4)}</td><td>${ddmm(p.fim)}/${p.fim.slice(0,4)}</td><td class="esq">${esc(p.descricao||'')}</td><td><button class="btn peq" onclick="apagarPeriodo(${p.id},this)">apagar</button></td></tr>`).join("")}
+    <tr><td><select id="pM"><option value="">todas</option>${j.mentorias.map(m => `<option value="${m.codigo}">${esc(m.nome)}</option>`).join("")}</select></td><td><select id="pT"><option>lancamento</option><option>acao</option><option>black</option></select></td><td><input type="date" id="pI"></td><td><input type="date" id="pF"></td><td><input type="text" id="pD" style="width:260px" placeholder="descrição"></td><td><button class="btn peq prim" onclick="novoPeriodo(this)">adicionar</button></td></tr></table></div></div>
+  <div class="folha"><h3>Prazos de "lead esquecido" <small>minutos</small></h3>
+    <div class="tw"><table><tr><th>Etapa</th><th>Descrição</th><th>Minutos</th><th></th></tr>
+    ${j.prazos.map(p => `<tr><td class="lab">${esc(p.etapa)}</td><td class="esq">${esc(p.descricao||'')}</td><td><input type="number" style="width:90px" value="${p.minutos}" data-e="${p.etapa}" class="iPrazo"></td><td><button class="btn peq" onclick="salvarPrazo(this)">ok</button></td></tr>`).join("")}</table></div></div>
+  <div class="folha"><h3>Agentes da Anne → conta e funil</h3><div class="tw"><table><tr><th>Agente</th><th>Conta</th><th>Funil</th></tr>${j.agentes.map(a => `<tr><td class="lab">${esc(a.agent_slug)}</td><td>${esc(a.mentoria||'—')}</td><td>${esc(a.funil)}</td></tr>`).join("")}</table></div>
+    <div class="form">Regras de reconhecimento das contas (campanha e produto) e dos agentes mudam por migration, não aqui.</div></div>`;
+}
+async function salvarMeta(b){ const td = b.closest("td"); const im = td.querySelector(".iMeta"), iv = td.querySelector(".iVerba"); b.disabled = true;
+  try { await post({acao:"meta", mentoria: im.dataset.m, mes: im.dataset.mes, meta_matriculas: im.value, verba_prevista: iv.value, por:"painel"}); b.textContent = "salvo"; setTimeout(()=>{b.textContent="ok"; b.disabled=false;}, 1200); } catch(e){ alert(e.message); b.disabled=false; } }
+async function salvarPrazo(b){ const i = b.closest("tr").querySelector(".iPrazo"); b.disabled = true; try { await post({acao:"prazo", etapa: i.dataset.e, minutos: i.value}); b.textContent="salvo"; setTimeout(()=>{b.textContent="ok"; b.disabled=false;},1200); } catch(e){ alert(e.message); b.disabled=false; } }
+async function novoPeriodo(b){ b.disabled = true; try { await post({acao:"periodo", mentoria: $("pM").value, tipo: $("pT").value, ini: $("pI").value, fim: $("pF").value, descricao: $("pD").value}); vConfig(); } catch(e){ alert(e.message); b.disabled=false; } }
+async function apagarPeriodo(id, b){ if(!confirm("Apagar este período?")) return; b.disabled = true; try { await post({acao:"periodo_apagar", id}); vConfig(); } catch(e){ alert(e.message); b.disabled=false; } }
+async function refreshAgora(b){ b.disabled = true; b.textContent = "reprocessando…"; try { const r = await post({acao:"refresh", dias:3}); b.textContent = `feito (${r.eventos} eventos, ${r.vendas} vendas)`; } catch(e){ b.textContent = "erro: "+e.message; } }
+
+iniciar();
+</script>
+</body>
+</html>
