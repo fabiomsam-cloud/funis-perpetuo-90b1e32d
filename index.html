@@ -274,8 +274,36 @@ async function salvarCamp(b){ const tr = b.closest("tr"); b.disabled = true; try
 async function regraCamp(b){ const tr = b.closest("tr"); b.disabled = true; try { await post({acao:"campanha_regra", campaign_id: tr.dataset.id}); setTimeout(vCampanhas, 600); } catch(e){ alert(e.message); b.disabled=false; } }
 
 // ---------------------------------------------------------------- Filas
+const GAT_NOME = {escalacao:"🚨 Escalação", negociacao_travada:"💳 Negociação travada", classe_a:"🔥 Classe A parada"};
+const REC_NOME = {posse_vencida:"posse vencida", devolvido:"devolvido pelo vendedor", b_esgotado:"classe B com cadência esgotada", limpeza_inicial:"limpeza inicial", respondeu_acao:"respondeu ação"};
+function secaoComercial(c){
+  if(!c || c.error) return `<div class="folha"><h3>Comercial humano</h3><p class="status aviso">Sem dados da Anne${c&&c.error?': '+esc(c.error):''}.</p></div>`;
+  const cfg = c.cfg||{};
+  const fila = c.fila||[], itens = c.fila_itens||[], vend = c.vendedores||[], esq = c.esquecidos||[], rec = c.recuperacao||[];
+  const quentes = fila.filter(f => f.prioridade<=2).reduce((a,f)=>a+f.n,0);
+  const vagas = vend.reduce((a,v)=>a+Math.max((v.teto||0)-(v.recebidos_hoje||0),0),0);
+  return `<div class="folha"><h3>Comercial humano · fila e posse <small>${cfg.ativo?'<span class="pill ok">distribuição automática LIGADA</span>':'<span class="pill al">distribuição automática DESLIGADA</span>'} ${cfg.inbox_vendedor_proprio?'<span class="pill ok">inbox só do vendedor</span>':'<span class="pill off">inbox aberto</span>'} · teto ${cfg.teto_dia||5}/dia · posse ${cfg.posse_dias||14} d</small></h3>
+    <div class="kpis">
+      <div class="kpi"><div class="v">${nf(quentes)}</div><div class="l">quentes na fila (escalação + negociação travada)</div><div class="s">${nf(vagas)} vagas restantes hoje · ${quentes>vagas?'<b style="color:#B4532A">acima do teto</b>':'dentro do teto'}</div></div>
+      <div class="kpi"><div class="v">${nf(fila.filter(f=>f.prioridade===3).reduce((a,f)=>a+f.n,0))}</div><div class="l">classe A parada (só com vaga)</div></div>
+      <div class="kpi"><div class="v">${nf(esq.length)}</div><div class="l">leads em posse esquecidos</div><div class="s">sem próxima ação em ${cfg.proxima_acao_horas||24} h ou ação vencida</div></div>
+      <div class="kpi"><div class="v">${nf(c.sem_resposta_anne)}</div><div class="l">conversas da Anne sem resposta</div><div class="s">lead falou por último há mais de ${cfg.sem_resposta_anne_min||30} min</div></div>
+      <div class="kpi"><div class="v">${nf(rec.reduce((a,r)=>a+r.n,0))}</div><div class="l">fila de recuperação</div><div class="s">${rec.map(r=>nf(r.n)+' '+(REC_NOME[r.motivo]||r.motivo)).join(' · ')||'—'}</div></div>
+    </div>
+    <div class="sub">Vendedores</div>
+    <div class="tw"><table><tr><th>Vendedor</th><th>Em posse</th><th>Recebidos hoje / teto</th><th>Sem próxima ação</th><th>Ação vencida</th><th>Lead sem resposta &gt; ${cfg.sem_resposta_humano_min||120} min</th><th>Posse vence em 48 h</th><th>Matrículas 30 d</th></tr>
+    ${vend.map(v => `<tr><td class="lab">${esc(v.nome)}</td><td>${nf(v.ativos)}</td><td>${nf(v.recebidos_hoje)} / ${nf(v.teto)}</td><td class="${v.sem_proxima_acao?'neg':''}">${nf(v.sem_proxima_acao)}</td><td class="${v.acao_vencida?'neg':''}">${nf(v.acao_vencida)}</td><td class="${v.sem_resposta?'neg':''}">${nf(v.sem_resposta)}</td><td>${nf(v.vencendo_48h)}</td><td>${nf(v.matriculados_30d)}</td></tr>`).join("")}</table></div>
+    <div class="sub">A atribuir <small>${nf(itens.length)} mais antigos por prioridade · o vendedor puxa no painel da Anne (botão Assumir) ou o banco entrega sozinho com a distribuição ligada</small></div>
+    <div class="tw"><table><tr><th>P</th><th>Gatilho</th><th>Lead</th><th>Agente</th><th>Jev</th><th>Motivo</th><th>Desde</th></tr>
+    ${itens.slice(0,150).map(i => `<tr><td>${i.prioridade}</td><td class="esq">${GAT_NOME[i.gatilho]||esc(i.gatilho)}</td><td class="esq">${esc(i.nome)} ${esc(i.tel)}</td><td>${esc(i.agente||'')}</td><td>${esc(i.classe||'')}</td><td class="esq">${esc(i.motivo||'')}</td><td>${esc(dhm(i.criado_em))}</td></tr>`).join("")||'<tr><td colspan=7>fila vazia</td></tr>'}</table></div>
+    <div class="sub">Esquecidos em posse</div>
+    <div class="tw"><table><tr><th>Vendedor</th><th>Lead</th><th>Gatilho</th><th>Desde</th><th>Próxima ação</th><th>Motivo</th><th>Posse vence</th></tr>
+    ${esq.map(e => `<tr><td class="lab">${esc(e.vendedor)}</td><td class="esq">${esc(e.nome)} ${esc(e.tel)}</td><td>${GAT_NOME[e.gatilho]||esc(e.gatilho||'')}</td><td>${esc(dhm(e.assigned_at))}</td><td class="esq">${esc(e.proxima_acao||'—')}${e.proxima_acao_em?' · '+esc(dhm(e.proxima_acao_em)):''}</td><td class="neg">${esc(e.motivo||'')}</td><td>${esc(dhm(e.expires_at))}</td></tr>`).join("")||'<tr><td colspan=7>ninguém esquecido</td></tr>'}</table></div>
+    <div class="form">Gatilhos de entrada na fila: escalação sem dono há ${cfg.escalacao_minutos||10} min · negociação travada (link/checkout enviado, respondeu, ${cfg.negociacao_horas||24} h parada) · classe A parada ${cfg.classe_a_horas||48} h. Lead B esgotado e lead frio nunca vão para humano: vão para a recuperação. Ligue/desligue a distribuição automática na aba Config.</div>
+  </div>`;
+}
 async function vFilas(){
-  const j = await api("filas");
+  const [j, c] = await Promise.all([api("filas"), api("comercial").catch(e => ({error: e.message}))]);
   if(!MENTORIAS.length){ const c = await api("config"); mentoriasSelect(c.mentorias); }
   $("status").innerHTML = `Filas calculadas agora (${esc(dhm(j.gerado_em))}) com os prazos da aba Config · v1: só o que o Data Core enxerga; "mensagem do lead sem resposta" entra na Fase 2 com o espelho de mensagens da Anne`;
   const tipos = Object.keys(TIPO_FILA);
@@ -284,7 +312,7 @@ async function vFilas(){
   const nome = c => (MENTORIAS.find(m => (m.mentoria||m.codigo)===c)||{}).nome || c;
   const tot = t => contas.reduce((a,c)=>a+(mapa[c][t]||0),0);
   const filtro = (document.getElementById("fTipo")||{}).value || "";
-  $("corpo").innerHTML = `<div class="folha"><h3>Leads esquecidos por conta</h3>
+  $("corpo").innerHTML = secaoComercial(c) + `<div class="folha"><h3>Leads esquecidos por conta <small>pelo que o Data Core enxerga</small></h3>
     <div class="tw"><table><tr><th>Conta</th>${tipos.map(t => `<th>${TIPO_FILA[t]}</th>`).join("")}</tr>
     ${contas.map(c => `<tr><td class="lab">${esc(nome(c))}</td>${tipos.map(t => `<td class="${(mapa[c][t]||0)>0?'neg':''}">${nf(mapa[c][t]||0)}</td>`).join("")}</tr>`).join("")}
     <tr class="tot"><td class="lab">Total</td>${tipos.map(t => `<td>${nf(tot(t))}</td>`).join("")}</tr></table></div>
@@ -308,12 +336,37 @@ async function vConfig(){
     <div class="tw"><table><tr><th>Conta</th><th>Tipo</th><th>De</th><th>Até</th><th>Descrição</th><th></th></tr>
     ${j.periodos.map(p => `<tr><td>${esc(p.mentoria||'todas')}</td><td>${esc(p.tipo)}</td><td>${ddmm(p.ini)}/${p.ini.slice(0,4)}</td><td>${ddmm(p.fim)}/${p.fim.slice(0,4)}</td><td class="esq">${esc(p.descricao||'')}</td><td><button class="btn peq" onclick="apagarPeriodo(${p.id},this)">apagar</button></td></tr>`).join("")}
     <tr><td><select id="pM"><option value="">todas</option>${j.mentorias.map(m => `<option value="${m.codigo}">${esc(m.nome)}</option>`).join("")}</select></td><td><select id="pT"><option>lancamento</option><option>acao</option><option>black</option></select></td><td><input type="date" id="pI"></td><td><input type="date" id="pF"></td><td><input type="text" id="pD" style="width:260px" placeholder="descrição"></td><td><button class="btn peq prim" onclick="novoPeriodo(this)">adicionar</button></td></tr></table></div></div>
+  <div class="folha" id="cv2box"><h3>Comercial humano v2 <small>flags no banco da Anne (global_settings.comercial_v2) — mudanças valem na próxima varredura (5 min)</small></h3><div id="cv2">carregando…</div></div>
   <div class="folha"><h3>Prazos de "lead esquecido" <small>minutos</small></h3>
     <div class="tw"><table><tr><th>Etapa</th><th>Descrição</th><th>Minutos</th><th></th></tr>
     ${j.prazos.map(p => `<tr><td class="lab">${esc(p.etapa)}</td><td class="esq">${esc(p.descricao||'')}</td><td><input type="number" style="width:90px" value="${p.minutos}" data-e="${p.etapa}" class="iPrazo"></td><td><button class="btn peq" onclick="salvarPrazo(this)">ok</button></td></tr>`).join("")}</table></div></div>
   <div class="folha"><h3>Agentes da Anne → conta e funil</h3><div class="tw"><table><tr><th>Agente</th><th>Conta</th><th>Funil</th></tr>${j.agentes.map(a => `<tr><td class="lab">${esc(a.agent_slug)}</td><td>${esc(a.mentoria||'—')}</td><td>${esc(a.funil)}</td></tr>`).join("")}</table></div>
     <div class="form">Regras de reconhecimento das contas (campanha e produto) e dos agentes mudam por migration, não aqui.</div></div>`;
+  desenharCv2();
 }
+async function desenharCv2(){
+  const c = await api("comercial").catch(e => ({error:e.message}));
+  if(c.error){ $("cv2").innerHTML = '<span class="aviso">'+esc(c.error)+'</span>'; return; }
+  const k = c.cfg||{};
+  const chk = (id,v,lab) => `<label><input type="checkbox" id="${id}" ${v?'checked':''}> ${lab}</label>`;
+  const num = (id,v,lab) => `<label>${lab} <input type="number" id="${id}" value="${v??''}" style="width:70px"></label>`;
+  $("cv2").innerHTML = `<div class="linha">
+    ${chk('cvAtivo', k.ativo, '<b>Distribuição automática ligada</b> (o banco entrega a fila aos closers até o teto)')}
+    ${chk('cvInbox', k.inbox_vendedor_proprio, '<b>Inbox só do vendedor</b> (vendedor vê só os leads dele, a fila "a atribuir" e escalações sem dono)')}
+    ${chk('cvAlerta', k.alertas_whatsapp, 'Alertas no seu WhatsApp (classe A sem resposta · fila acima do teto)')}</div>
+    <div class="linha">${num('cvTeto', k.teto_dia, 'teto/dia')} ${num('cvPosse', k.posse_dias, 'posse (dias)')} ${num('cvNeg', k.negociacao_horas, 'negociação travada (h)')} ${num('cvA', k.classe_a_horas, 'classe A parada (h)')} ${num('cvEsc', k.escalacao_minutos, 'escalação sem dono (min)')} ${num('cvPA', k.proxima_acao_horas, 'sem próxima ação (h)')} ${num('cvAh', k.alerta_classe_a_horas, 'alerta classe A (h)')}
+      <button class="btn prim peq" onclick="salvarCv2(this)">Salvar flags</button></div>
+    <div class="linha"><button class="btn peq" onclick="tickCv2(this)">Rodar varredura agora</button>
+      <button class="btn peq" onclick="limpezaCv2(this,false)">Limpeza inicial: simular (posse sem trabalho há 14 d)</button>
+      <button class="btn peq" onclick="limpezaCv2(this,true)">Limpeza inicial: APLICAR</button> <span id="cv2msg" class="msg"></span></div>
+    <div class="form">Roleta semanal encerrada em 24/10 (decisão Q36). Fila detectada a cada 5 min mesmo com a distribuição desligada, para você ver antes de ligar. Última leitura: ${esc(dhm(c.gerado_em))} · alertas nas últimas 24 h: ${nf(c.alertas_24h)}.</div>`;
+}
+async function salvarCv2(b){ b.disabled=true; try { const r = await post({acao:"cv2_cfg", ativo:$("cvAtivo").checked, inbox_vendedor_proprio:$("cvInbox").checked, alertas_whatsapp:$("cvAlerta").checked,
+    teto_dia:+$("cvTeto").value, posse_dias:+$("cvPosse").value, negociacao_horas:+$("cvNeg").value, classe_a_horas:+$("cvA").value, escalacao_minutos:+$("cvEsc").value, proxima_acao_horas:+$("cvPA").value, alerta_classe_a_horas:+$("cvAh").value});
+    $("cv2msg").textContent = r.ok ? "flags salvas" : JSON.stringify(r); } catch(e){ $("cv2msg").textContent = "erro: "+e.message; } b.disabled=false; }
+async function tickCv2(b){ b.disabled=true; try { const r = await post({acao:"cv2_tick"}); $("cv2msg").textContent = `varredura: ${r.detectar?.novos} novos na fila · ${r.distribuir?.atribuidos} atribuídos · ${r.expirar?.recuperacao_posse+r.expirar?.recuperacao_b} p/ recuperação`; desenharCv2(); } catch(e){ $("cv2msg").textContent = "erro: "+e.message; } b.disabled=false; }
+async function limpezaCv2(b, aplicar){ if(aplicar && !confirm("Encerrar a posse de TODOS os cards ativos sem trabalho há 14 dias e mandar para a recuperação?")) return; b.disabled=true;
+  try { const r = await post({acao:"cv2_limpeza", dias:14, aplicar}); $("cv2msg").textContent = (aplicar?"APLICADO: ":"simulação: ")+r.total+" cards"+(r.por_vendedor?" · "+Object.entries(r.por_vendedor).map(([k,v])=>k+" "+v).join(", "):""); } catch(e){ $("cv2msg").textContent = "erro: "+e.message; } b.disabled=false; }
 async function salvarMeta(b){ const td = b.closest("td"); const im = td.querySelector(".iMeta"), iv = td.querySelector(".iVerba"); b.disabled = true;
   try { await post({acao:"meta", mentoria: im.dataset.m, mes: im.dataset.mes, meta_matriculas: im.value, verba_prevista: iv.value, por:"painel"}); b.textContent = "salvo"; setTimeout(()=>{b.textContent="ok"; b.disabled=false;}, 1200); } catch(e){ alert(e.message); b.disabled=false; } }
 async function salvarPrazo(b){ const i = b.closest("tr").querySelector(".iPrazo"); b.disabled = true; try { await post({acao:"prazo", etapa: i.dataset.e, minutos: i.value}); b.textContent="salvo"; setTimeout(()=>{b.textContent="ok"; b.disabled=false;},1200); } catch(e){ alert(e.message); b.disabled=false; } }
