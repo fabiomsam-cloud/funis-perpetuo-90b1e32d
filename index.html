@@ -66,7 +66,7 @@ td.neg{color:var(--alerta);font-weight:700} td.pos{color:var(--verde);font-weigh
     <h1>Funis do Perpétuo</h1>
     <div class="abas" id="abas">
       <button data-a="geral" class="on">Visão geral</button><button data-a="mentoria">Mentoria</button><button data-a="coortes">Coortes</button>
-      <button data-a="campanhas">Campanhas</button><button data-a="filas">Filas</button><button data-a="config">Config</button>
+      <button data-a="campanhas">Campanhas</button><button data-a="filas">Filas</button><button data-a="leitura">Leitura semanal</button><button data-a="config">Config</button>
     </div>
     <div class="filtros">
       <label>Período <select id="preset">
@@ -124,7 +124,7 @@ $("abas").onclick = e => { const b = e.target.closest("button"); if(!b) return; 
 async function iniciar(){
   if(!K){ $("status").innerHTML = '<span class="aviso">Falta o token no link (?k=…).</span>'; return; }
   aplicarPreset();
-  const h = location.hash.slice(1); if(["geral","mentoria","coortes","campanhas","filas","config"].includes(h)){ ABA = h; [...$("abas").children].forEach(x => x.classList.toggle("on", x.dataset.a===h)); }
+  const h = location.hash.slice(1); if(["geral","mentoria","coortes","campanhas","filas","leitura","config"].includes(h)){ ABA = h; [...$("abas").children].forEach(x => x.classList.toggle("on", x.dataset.a===h)); }
   carregar();
 }
 
@@ -138,6 +138,7 @@ async function carregar(){
     else if(ABA==="coortes") await vCoortes();
     else if(ABA==="campanhas") await vCampanhas();
     else if(ABA==="filas") await vFilas();
+    else if(ABA==="leitura") await vLeitura();
     else if(ABA==="config") await vConfig();
   } catch(e){ $("status").innerHTML = '<span class="aviso">Erro: '+esc(e.message)+'</span>'; $("corpo").innerHTML = ""; }
 }
@@ -321,6 +322,33 @@ async function vFilas(){
     <div class="tw"><table><tr><th>Fila</th><th>Conta</th><th>Funil</th><th>Telefone</th><th>Desde</th><th>Horas parado</th></tr>
     ${j.itens.filter(i => !filtro || i.tipo===filtro).map(i => `<tr><td class="esq">${TIPO_FILA[i.tipo]||i.tipo}</td><td>${esc(nome(i.mentoria))}</td><td>${esc(FUNIL_NOME[i.funil]||i.funil)}</td><td>${esc(i.tel)}</td><td>${esc(dhm(i.desde))}</td><td class="${i.horas>48?'neg':''}">${nf(i.horas)}</td></tr>`).join("")}</table></div>
     <div class="form">Lead novo = cadastro/isca/clique sem nenhum toque da Anne depois · Carrinho = evento da Hubla sem régua nem resposta · Negociação = link, checkout aberto ou carrinho sem pagamento e sem qualquer evento depois · Classe A = Jev A sem evento há 48 h. Telefone mascarado; a conversa abre no inbox da Anne pelo número.</div></div>`;
+}
+
+// ---------------------------------------------------------------- Leitura semanal (Fase 5)
+async function vLeitura(){
+  const sem = (document.getElementById("selSemana")||{}).value || "";
+  const j = await api("leitura", sem ? "&semana="+sem : "");
+  const L = j.leitura; const semanas = j.semanas||[];
+  $("lMent").style.display = "none";
+  if(!L){ $("status").textContent = "Ainda não há leitura semanal."; $("corpo").innerHTML = '<div class="vazio">A rotina de segunda-feira (07h30) grava a primeira leitura.</div>'; return; }
+  const D = L.dados, T = L.texto||{};
+  $("status").innerHTML = `Semana <b>${ddmm(D.semana)} → ${ddmm(D.fim)}</b> · números ${esc(dhm(L.gerado_em))}${L.comentado_em?` · leitura ${esc(dhm(L.comentado_em))} (${esc(L.modelo||'')})`:' · <span class="aviso">sem texto ainda</span>'}
+    <select id="selSemana" onchange="vLeitura()" style="margin-left:8px">${semanas.map(x => `<option value="${x.semana}" ${x.semana===D.semana?'selected':''}>${ddmm(x.semana)}</option>`).join("")}</select>`;
+  const d = (a,b) => (a==null||b==null) ? "" : (a-b>0?` <small style="color:#2F7D62">+${nf(a-b)}</small>`:a-b<0?` <small style="color:#B4532A">${nf(a-b)}</small>`:"");
+  const rows = D.contas.map(c => { const s=c.semana, a=c.anterior||{}, m=c.mes||{}, cv=c.conversao||{}; const tx=(T.contas||{})[c.mentoria]||{};
+    return `<tr class="${c.meta_habilitada?'':'sem'}"><td class="lab">${esc(c.nome)}</td>
+      <td>${nf(s.leads)}${d(s.leads,a.leads)}</td><td>${nf(s.oportunidades)}${d(s.oportunidades,a.oportunidades)}</td><td>${nf(s.negociacoes)}${d(s.negociacoes,a.negociacoes)}</td><td><b>${nf(s.matriculas)}</b>${d(s.matriculas,a.matriculas)}</td>
+      <td><small>${cv.lead_oport!=null?nf(cv.lead_oport,1)+'%':'—'} · ${cv.oport_negoc!=null?nf(cv.oport_negoc,1)+'%':'—'} · ${cv.negoc_matr!=null?nf(cv.negoc_matr,1)+'%':'—'}</small></td>
+      <td>${R(s.receita)}</td><td>${R(s.gasto_mentoria)}</td><td>${s.matriculas&&s.gasto_mentoria?R(s.cpa_mentoria):'—'}</td><td>${X(s.roas)}</td>
+      <td>${nf(m.matriculas)}${m.meta!=null?` / ${nf(m.meta)}`:''}</td>
+      <td class="esq" style="white-space:normal;min-width:260px">${tx.onde_perde?`<b>${esc(tx.onde_perde)}</b>`:''}${tx.acao?`<br>${esc(tx.acao)}`:''}</td></tr>`; }).join("");
+  const filas = (D.filas||[]).reduce((o,f)=>{ (o[f.tipo]=o[f.tipo]||0); o[f.tipo]+=f.n; return o; },{});
+  $("corpo").innerHTML = `<div class="folha"><h3>Leitura da semana ${ddmm(D.semana)} → ${ddmm(D.fim)} <small>ordem de investigação: checkout→pagamento · negociação→matrícula · oferta→compra · cadastro→audiência · perfil</small></h3>
+    ${T.geral?`<p style="font-size:.9rem;margin:8px 0 4px">${esc(T.geral)}</p>`:''}
+    ${(T.decisoes||[]).length?`<div class="sub">O que merece decisão</div><ol style="padding-left:20px;font-size:.85rem">${T.decisoes.map(x=>`<li>${esc(x)}</li>`).join("")}</ol>`:''}
+    <div class="sub">Contas na semana <small>variação contra a semana anterior · conversão lead→oport · oport→negoc · negoc→matr</small></div>
+    <div class="tw"><table><tr><th>Conta</th><th>Leads</th><th>Oport.</th><th>Negoc.</th><th>Matr.</th><th>Conversão</th><th>Receita</th><th>Gasto</th><th>CPA</th><th>ROAS</th><th>Mês<small>matr / meta</small></th><th>Onde perde · ação</th></tr>${rows}</table></div>
+    <div class="form">Filas no momento da leitura: ${Object.entries(filas).map(([k,v])=>nf(v)+' '+(TIPO_FILA[k]||k)).join(' · ')||'—'}. Números da semana fechada (segunda a domingo, Manaus); matrícula = 1ª parcela paga; sem Black.</div></div>`;
 }
 
 // ---------------------------------------------------------------- Config
