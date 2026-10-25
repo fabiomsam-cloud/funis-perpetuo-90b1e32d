@@ -231,6 +231,7 @@ async function vMentoria(){
     ${vf.direto ? `<div class="form">Vendas sem evento rastreável nos 7 dias antes do pagamento ("direto"): <b>${vf.direto.n}</b> (${R(vf.direto.liq)}).</div>` : ""}
     <div class="grid2">
       <div><div class="sub">Origem do lead (1º toque)</div><div class="tw"><table><tr><th>Canal</th><th>Matrículas</th><th>Receita</th></tr>${j.origem.map(o => `<tr><td class="lab">${esc(o.canal)}</td><td>${nf(o.n)}</td><td>${R(o.liq)}</td></tr>`).join("")}</table></div></div>
+      <div><div class="sub">Vendas por cupom <small>ações do agente de desconto</small></div><div class="tw"><table><tr><th>Cupom</th><th>Matrículas</th><th>Receita</th></tr>${(j.cupons||[]).map(o => `<tr><td class="lab">${esc(o.cupom)}</td><td>${nf(o.n)}</td><td>${R(o.liq)}</td></tr>`).join("")||'<tr><td colspan=3>—</td></tr>'}</table></div></div>
       <div><div class="sub">Campanhas da conta no período</div><div class="tw"><table><tr><th>Campanha</th><th>Funil</th><th>Gasto</th><th>Cliques</th></tr>${(j.campanhas||[]).map(c => `<tr><td class="esq">${esc(c.campaign_name)}${c.fonte==='manual'?' <span class="pill man">manual</span>':''}</td><td>${esc(c.funil)}</td><td>${R(c.gasto)}</td><td>${nf(c.cliques)}</td></tr>`).join("")||'<tr><td colspan=4>sem campanha no período</td></tr>'}</table></div></div>
     </div>
     <div class="sub">Dia a dia</div>
