@@ -268,10 +268,10 @@ function Mapa() {
           <div className="kpi"><b style={{ color: 'var(--gold)' }}>{calc.kpis.roas != null ? String(calc.kpis.roas).replace('.', ',') + '×' : '—'}</b><span>ROAS</span></div>
           <div className="kpi"><b style={{ color: 'var(--gold)' }}>{calc.kpis.cpa != null ? 'R$ ' + nf(calc.kpis.cpa) : '—'}</b><span>CPA</span></div>
         </div>}
-        {k && camada !== 'previsao' && <div className="kpis">
-          <div className="kpi"><b>{nf(k.matriculas)}{D(k.matriculas, kA?.matriculas)}</b><span>matrículas</span></div>
+        {k && camada !== 'previsao' && <div className="kpis" title={k.filtro?.funis?.length || k.filtro?.fechamento ? `Números só deste funil (último funil: ${(k.filtro.funis || []).join('/') || '—'}${k.filtro.fechamento ? ', fechamento ' + k.filtro.fechamento : ''}). A conta inteira teve ${nf(k.matriculas_conta)} matrículas no período.` : 'Números da conta inteira no período'}>
+          <div className="kpi"><b>{nf(k.matriculas)}{D(k.matriculas, kA?.matriculas)}</b><span>{k.filtro?.funis?.length || k.filtro?.fechamento ? `matr. do funil · conta ${nf(k.matriculas_conta)}` : 'matrículas'}</span></div>
           <div className="kpi"><b>R$ {nf(k.receita)}{D(k.receita, kA?.receita)}</b><span>receita</span></div>
-          <div className="kpi"><b>R$ {nf(k.gasto)}{D(k.gasto, kA?.gasto)}</b><span>mídia ×1,1383</span></div>
+          <div className="kpi"><b>R$ {nf(k.gasto)}{D(k.gasto, kA?.gasto)}</b><span>{k.filtro?.funis?.length ? 'mídia do funil' : 'mídia ×1,1383'}</span></div>
           <div className="kpi"><b>{k.roas != null ? String(k.roas).replace('.', ',') + '×' : '—'}{D(k.roas, kA?.roas, true)}</b><span>ROAS</span></div>
           <div className="kpi"><b>{k.cpa != null ? 'R$ ' + nf(k.cpa) : '—'}{D(k.cpa, kA?.cpa)}</b><span>CPA</span></div>
         </div>}

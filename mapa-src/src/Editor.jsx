@@ -81,6 +81,18 @@ export default function Editor({ doc, sel, catalogo, papel, mapaId, sujo, ocupad
                     onChange={e => { const arr = e.target.value.split(',').map(x => x.trim()).filter(Boolean); updBind(no.id, { tipos: arr.length ? arr : undefined, tipo: arr.length ? undefined : no.bind.tipo }) }} />
                 </>
               )}
+              {no.bind?.k === 'vendas' && (
+                <>
+                  <label>Só matrículas cujo último funil é… (vírgula; vazio = todas da conta)</label>
+                  <input type="text" placeholder="ex.: webinario  ou  nutricao, organico" value={(no.bind.funis || []).join(', ')}
+                    onChange={e => { const arr = e.target.value.split(',').map(x => x.trim().toLowerCase()).filter(Boolean); updBind(no.id, { funis: arr.length ? arr : undefined }) }} />
+                  <div className="dica" style={{ marginTop: 4 }}>Valores: webinario · blindado · carrinho · disparo · desconto · nutricao · organico · lowticket · direto · outros</div>
+                  <label>Só matrículas com fechamento…</label>
+                  <select value={no.bind.fechamento || ''} onChange={e => updBind(no.id, { fechamento: e.target.value || undefined })}>
+                    <option value="">(qualquer)</option><option value="anne">Anne</option><option value="humano">humano (vendedor)</option><option value="sozinho">sozinho</option>
+                  </select>
+                </>
+              )}
               {no.bind?.k === 'gasto' && (
                 <>
                   <label>Funil (classificação das campanhas)</label>

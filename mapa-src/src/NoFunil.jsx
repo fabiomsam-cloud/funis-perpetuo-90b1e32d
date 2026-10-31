@@ -35,7 +35,7 @@ export default memo(function NoFunil({ data }) {
       {k === 'gasto' && <div className="s">{val.campanhas ? `${val.campanhas} campanha${val.campanhas > 1 ? 's' : ''} · com imposto` : (n.sub || 'sem gasto no período')}</div>}
       {k === 'evento' && <div className="s">{val.eventos && val.eventos !== val.pessoas ? `pessoas · ${nf(val.eventos)} eventos` : 'pessoas'}{n.sub ? ` · ${n.sub}` : ''}</div>}
       {k === 'vendas' && val.matriculas != null && (
-        <div className="s">R$ {nf(val.receita)} · 1ª parcela paga<br />
+        <div className="s">R$ {nf(val.receita)}{val.filtro?.funis?.length || val.filtro?.fechamento ? <> · <b>só {val.filtro.fechamento ? 'fechamento ' + val.filtro.fechamento : 'último funil ' + val.filtro.funis.join('/')}</b>{val.matriculas_conta != null ? ` · conta ${nf(val.matriculas_conta)}` : ''}</> : ' · 1ª parcela paga'}<br />
           fechamento: <b style={{ color: 'var(--purple)' }}>Anne {val.fechamento?.anne ?? 0}</b> · <b style={{ color: 'var(--gold)' }}>humano {val.fechamento?.humano ?? 0}</b> · sozinho {val.fechamento?.sozinho ?? 0}<br />
           {Object.entries(val.por_funil || {}).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([f, q]) => `${f} ${q}`).join(' · ')}
           {val.reembolsos ? <><br /><span style={{ color: 'var(--red)' }}>{val.reembolsos} reembolso{val.reembolsos > 1 ? 's' : ''}</span></> : null}
