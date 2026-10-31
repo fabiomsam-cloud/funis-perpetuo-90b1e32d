@@ -66,7 +66,7 @@ td.neg{color:var(--alerta);font-weight:700} td.pos{color:var(--verde);font-weigh
     <h1>Funis do Perpétuo</h1>
     <div class="abas" id="abas">
       <button data-a="geral" class="on">Visão geral</button><button data-a="mentoria">Mentoria</button><button data-a="coortes">Coortes</button>
-      <button data-a="campanhas">Campanhas</button><button data-a="filas">Filas</button><button data-a="leitura">Leitura semanal</button><button data-a="config">Config</button>
+      <button data-a="campanhas">Campanhas</button><button data-a="filas">Filas</button><button data-a="leitura">Leitura semanal</button><button data-a="mapa">Mapa</button><button data-a="config">Config</button>
     </div>
     <div class="filtros">
       <label>Período <select id="preset">
@@ -124,7 +124,7 @@ $("abas").onclick = e => { const b = e.target.closest("button"); if(!b) return; 
 async function iniciar(){
   if(!K){ $("status").innerHTML = '<span class="aviso">Falta o token no link (?k=…).</span>'; return; }
   aplicarPreset();
-  const h = location.hash.slice(1); if(["geral","mentoria","coortes","campanhas","filas","leitura","config"].includes(h)){ ABA = h; [...$("abas").children].forEach(x => x.classList.toggle("on", x.dataset.a===h)); }
+  const h = location.hash.slice(1); if(["geral","mentoria","coortes","campanhas","filas","leitura","mapa","config"].includes(h)){ ABA = h; [...$("abas").children].forEach(x => x.classList.toggle("on", x.dataset.a===h)); }
   carregar();
 }
 
@@ -139,6 +139,7 @@ async function carregar(){
     else if(ABA==="campanhas") await vCampanhas();
     else if(ABA==="filas") await vFilas();
     else if(ABA==="leitura") await vLeitura();
+    else if(ABA==="mapa") await vMapa();
     else if(ABA==="config") await vConfig();
   } catch(e){ $("status").innerHTML = '<span class="aviso">Erro: '+esc(e.message)+'</span>'; $("corpo").innerHTML = ""; }
 }
@@ -325,6 +326,15 @@ async function vFilas(){
 }
 
 // ---------------------------------------------------------------- Leitura semanal (Fase 5)
+// ---------------------------------------------------------------- Mapa (funil visual, Fase 2) — app em mapa/ lendo a mesma edge
+async function vMapa(){
+  $("lMent").style.display = "none";
+  const m = ($("ment") && $("ment").value) || "TJAM";   // mentoria escolhida no seletor da aba Mentoria
+  const url = "mapa/?k=" + encodeURIComponent(K) + "&m=" + encodeURIComponent(m) + "&t=mestre&p=mes";
+  $("status").innerHTML = `Mapa visual dos funis · <a href="${url}" target="_blank" rel="noopener">abrir em tela cheia ↗</a> · clique num nó ou no número de uma seta para ver quem passou`;
+  $("corpo").innerHTML = `<iframe src="${url}" style="width:100%;height:calc(100vh - 150px);min-height:640px;border:1px solid var(--line,#ddd);border-radius:12px;background:#0b1512"></iframe>`;
+}
+
 async function vLeitura(){
   const sem = (document.getElementById("selSemana")||{}).value || "";
   const j = await api("leitura", sem ? "&semana="+sem : "");
@@ -341,7 +351,10 @@ async function vLeitura(){
       <td><small>${cv.lead_oport!=null?nf(cv.lead_oport,1)+'%':'—'} · ${cv.oport_negoc!=null?nf(cv.oport_negoc,1)+'%':'—'} · ${cv.negoc_matr!=null?nf(cv.negoc_matr,1)+'%':'—'}</small></td>
       <td>${R(s.receita)}</td><td>${R(s.gasto_mentoria)}</td><td>${s.matriculas&&s.gasto_mentoria?R(s.cpa_mentoria):'—'}</td><td>${X(s.roas)}</td>
       <td>${nf(m.matriculas)}${m.meta!=null?` / ${nf(m.meta)}`:''}</td>
-      <td class="esq" style="white-space:normal;min-width:260px">${tx.onde_perde?`<b>${esc(tx.onde_perde)}</b>`:''}${tx.acao?`<br>${esc(tx.acao)}`:''}</td></tr>`; }).join("");
+      <td class="esq" style="white-space:normal;min-width:260px">${tx.onde_perde?`<b>${esc(tx.onde_perde)}</b>`:''}${tx.acao?`<br>${esc(tx.acao)}`:''}
+        ${(c.vazamentos||[]).length?`<div style="margin-top:4px;font-size:.78rem;color:#555">${c.vazamentos.slice(0,3).map(v=>`⬇ ${esc(v.de)} → ${esc(v.para)}: <b>${nf(v.pct,1)}%</b> <small>(média 60 d ${nf(v.pct_base,1)}%, ${nf(v.perda)} pessoas a menos)</small>`).join('<br>')}</div>`:''}
+        ${c.previsao && !c.previsao.sem_dados && !c.previsao.sem_previsao ? `<div style="font-size:.78rem;margin-top:3px">${c.previsao.alerta?'<span class="aviso">⚠ fora da previsão</span>':'<span style="color:#2F7D62">✓ dentro da previsão</span>'} <small>(matrículas ${(c.previsao.desvio_pct||{}).matriculas>0?'+':''}${(c.previsao.desvio_pct||{}).matriculas??0}% vs esperado no mês)</small></div>`:''}
+        <div style="margin-top:3px"><a href="mapa/?k=${encodeURIComponent(K)}&m=${c.mentoria}&t=mestre&p=custom&ini=${D.semana}&fim=${D.fim}" target="_blank" rel="noopener" style="font-size:.78rem">abrir o mapa desta semana ↗</a></div></td></tr>`; }).join("");
   const filas = (D.filas||[]).reduce((o,f)=>{ (o[f.tipo]=o[f.tipo]||0); o[f.tipo]+=f.n; return o; },{});
   $("corpo").innerHTML = `<div class="folha"><h3>Leitura da semana ${ddmm(D.semana)} → ${ddmm(D.fim)} <small>ordem de investigação: checkout→pagamento · negociação→matrícula · oferta→compra · cadastro→audiência · perfil</small></h3>
     ${T.geral?`<p style="font-size:.9rem;margin:8px 0 4px">${esc(T.geral)}</p>`:''}

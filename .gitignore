@@ -6,3 +6,8 @@ publicar.sh
 *.py
 *.md
 .DS_Store
+.token_anne
+supabase/
+saida/
+.token_leitura
+mapa-src/node_modules/

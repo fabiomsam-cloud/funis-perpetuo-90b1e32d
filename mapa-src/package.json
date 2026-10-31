@@ -1,0 +1,9 @@
+{
+  "name": "funis-mapa",
+  "private": true,
+  "version": "0.2.0",
+  "type": "module",
+  "scripts": { "dev": "vite", "build": "vite build" },
+  "dependencies": { "react": "^18.3.1", "react-dom": "^18.3.1", "@xyflow/react": "^12.3.5", "html-to-image": "^1.11.11" },
+  "devDependencies": { "vite": "^5.4.10", "@vitejs/plugin-react": "^4.3.3" }
+}

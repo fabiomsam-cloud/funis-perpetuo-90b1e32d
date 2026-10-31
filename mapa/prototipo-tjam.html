@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mapa · TJ-AM · outubro/26 (protótipo Fase 0)</title>
+<style>
+:root{--ink:#0b1512;--panel:#101d19;--panel2:#16261f;--line:#1f332a;--gold:#f5b942;--teal:#35d0ba;--cream:#e8efe9;--dim:#8aa396;
+ --red:#e06f6f;--amber:#ef9a3c;--green:#6fe08c;--grey:#5f7368;--purple:#b89cff;--blue:#6fb3e0}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--ink);color:var(--cream);font:13px/1.35 -apple-system,"Segoe UI",Inter,sans-serif}
+header{position:sticky;top:0;z-index:5;background:rgba(11,21,18,.92);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);padding:10px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+header h1{font-size:15px;margin:0}header h1 small{color:var(--dim);font-weight:400;margin-left:8px}
+.kpis{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap}.kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px 10px;min-width:92px}
+.kpi b{display:block;font-size:16px}.kpi span{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.4px}
+.camadas{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:3px}
+.camadas button{background:transparent;border:0;color:var(--dim);font:inherit;font-size:12px;padding:5px 10px;border-radius:8px;cursor:pointer}
+.camadas button.on{background:var(--gold);color:#0b1512;font-weight:600}
+.zoom{display:flex;align-items:center;gap:6px;color:var(--dim);font-size:11px}.zoom input{width:120px}
+.wrap{position:relative;overflow:auto;height:calc(100vh - 58px)}
+.canvas{position:relative;transform-origin:0 0;width:2330px;height:1200px;
+ background-image:radial-gradient(circle,rgba(138,163,150,.18) 1px,transparent 1px);background-size:22px 22px}
+svg.fios{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.lane{position:absolute;left:0;right:0;border-top:1px dashed rgba(138,163,150,.18)}
+.lane .rot{position:absolute;left:12px;top:8px;font-size:10px;letter-spacing:.6px;text-transform:uppercase;color:var(--dim)}
+.lane .rot b{color:var(--cream);display:block;font-size:11px;letter-spacing:.3px;text-transform:none;margin-top:2px}
+.no{position:absolute;width:176px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:8px 10px 8px 12px;cursor:default;transition:box-shadow .15s}
+.no::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;border-radius:12px 0 0 12px;background:var(--cor,#2b4638)}
+.no.sel{box-shadow:0 0 0 2px var(--gold)}.no.apagado{opacity:.35}
+.no .t{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.4px;display:flex;align-items:center;gap:5px}
+.no .n{font-weight:600;font-size:12.5px;margin-top:2px;line-height:1.25}
+.no .v{font-size:17px;font-weight:700;margin-top:3px;font-variant-numeric:tabular-nums}
+.no .v small{font-size:10px;color:var(--dim);font-weight:500;margin-left:4px}
+.no .s{font-size:10px;color:var(--dim);margin-top:2px}
+.no.fonte{--cor:var(--blue)}.no.pagina{--cor:#8aa396}.no.evento{--cor:var(--teal)}.no.anne{--cor:var(--purple)}.no.humano{--cor:var(--gold)}.no.resultado{--cor:var(--green)}.no.saida{--cor:var(--red)}
+.no.resultado{background:linear-gradient(180deg,rgba(111,224,140,.12),var(--panel2));border-color:rgba(111,224,140,.45);width:200px}
+.no.vazio{border-style:dashed;opacity:.75}
+.rotulo{position:absolute;transform:translate(-50%,-50%);background:var(--ink);border:1px solid var(--line);border-radius:8px;padding:2px 7px;font-size:10.5px;font-variant-numeric:tabular-nums;white-space:nowrap;pointer-events:auto}
+.rotulo b{font-size:11px}.rotulo small{color:var(--dim)}
+.rotulo.red b{color:var(--red)}.rotulo.amber b{color:var(--amber)}.rotulo.green b{color:var(--green)}.rotulo.grey b{color:var(--dim)}
+.nota{position:absolute;width:230px;background:rgba(245,185,66,.06);border:1px dashed rgba(245,185,66,.45);border-radius:10px;padding:8px 10px;font-size:11px;color:var(--dim)}
+.nota b{color:var(--gold)}
+.legenda{position:fixed;right:14px;bottom:14px;z-index:5;background:rgba(16,29,25,.95);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:11px;color:var(--dim);max-width:330px}
+.legenda i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.modo-mapa .rotulo,.modo-mapa .no .v,.modo-mapa .no .s{display:none}
+.modo-mapa .no{padding-bottom:10px}
+</style></head><body>
+<header>
+ <h1>Mapa mestre · <span style="color:var(--gold)">TJ-AM</span><small>1 a 30 de outubro de 2026 · sem Black · protótipo da Fase 0</small></h1>
+ <div class="camadas"><button class="on" data-m="real">Real</button><button data-m="mapa">Só o mapa</button><button disabled title="Fase 4">Previsão</button></div>
+ <div class="zoom"><span>zoom</span><input id="zoom" type="range" min="40" max="120" value="70"></div>
+ <div class="kpis">
+  <div class="kpi"><b>74</b><span>matrículas</span></div>
+  <div class="kpi"><b>R$ 69.084</b><span>receita</span></div>
+  <div class="kpi"><b>R$ 16.387</b><span>mídia (×1,1383)</span></div>
+  <div class="kpi"><b>4,22×</b><span>ROAS</span></div>
+  <div class="kpi"><b>R$ 221</b><span>CPA</span></div>
+ </div>
+</header>
+<div class="wrap"><div class="canvas" id="canvas"><svg class="fios" id="fios"></svg></div></div>
+<div class="legenda">
+ <div style="margin-bottom:5px"><i style="background:var(--blue)"></i>fonte · <i style="background:#8aa396"></i>página · <i style="background:var(--teal)"></i>evento · <i style="background:var(--purple)"></i>Anne · <i style="background:var(--gold)"></i>humano · <i style="background:var(--green)"></i>resultado</div>
+ <div>Seta = pessoas que passaram de um nó ao outro em até 30 dias · <b style="color:var(--green)">%</b> <b style="color:var(--amber)">%</b> <b style="color:var(--red)">%</b> cores provisórias por faixa; na Fase 4 a cor compara com a previsão · <small>h</small> = tempo médio até o próximo passo · largura ∝ volume. Clique num nó para destacar os caminhos dele.</div>
+</div>
+<script>
+// ---- posições: coluna x faixa ----
+const X0=250, DX=232, Y0=110, DY=138;
+const lanes=[
+ ['TOPO','Fase 1 e 2 · aquecimento'],['WEBINÁRIO','aula automática'],['BLINDADO','VSL + régua'],['CARRINHO','abandono Hubla'],
+ ['DISPAROS ANNE','base + roteador'],['DESCONTO','AGORA15'],['NUTRIÇÃO + ORGÂNICO','isca, grupo, aulas'],['COMERCIAL HUMANO','vendedores']];
+const N=[
+ // id, lane, col, tipo, título, valor, sub
+ ['topo',0,0,'fonte','Meta · TOPO (2 campanhas)','R$ 6.258','gasto c/ imposto · aquece as outras fontes'],
+ ['topo_pub',0,1,'evento','Públicos aquecidos','—','visualizadores 50% · seguidores (Fase 2)'],
+
+ ['web_meta',1,0,'fonte','Meta · [WEB][TJAM]','R$ 8.076','1 campanha · R$ 13 por cadastro'],
+ ['web_pag',1,1,'pagina','Página de captação','613','cadastros · régua 491 pessoas'],
+ ['web_entrou',1,2,'evento','Entrou na aula','483',''],
+ ['web_pitch',1,3,'evento','Chegou ao pitch','252',''],
+ ['web_clicou',1,4,'evento','Clicou no checkout','121',''],
+ ['web_anne',1,5,'anne','Anne webinário · respondeu','149','117 vieram do cadastro · 12 escalados'],
+ ['web_link',1,6,'anne','Link enviado pela Anne','121',''],
+
+ ['bl_meta',2,0,'fonte','Meta · [BLIND][TJAM]','R$ 2.053','1 campanha · R$ 14 por clique'],
+ ['bl_vsl',2,1,'pagina','VSL · clique no checkout blindado','147','pessoas'],
+ ['bl_regua',2,2,'anne','Régua do blindado (Anne)','111','1 controle (10%)'],
+
+ ['car_aband',3,1,'evento','Carrinho abandonado (Hubla)','245','pessoas · 295 abandonos'],
+ ['car_regua',3,2,'anne','Régua de carrinho (Anne)','41','12 controle'],
+
+ ['disp_env',4,0,'fonte','Disparo da base','154','pessoas · 246 envios'],
+ ['disp_rot',4,1,'anne','Roteador (lead chegou)','284','pessoas'],
+ ['disp_resp',4,2,'anne','Respondeu à Anne','141','Jev: 113 com classe'],
+ ['disp_link',4,3,'anne','Link enviado','129',''],
+
+ ['desc_env',5,0,'fonte','Disparo AGORA15','3.457','pessoas · agente de desconto'],
+
+ ['org_isca',6,0,'fonte','Isca orgânica (IG/YT)','25','cadastros · 45 eventos'],
+ ['nut_grupo',6,1,'evento','Entrou no grupo','55','pessoas (Sendflow)'],
+ ['nut_aula',6,2,'evento','Aula assistida ≥50%','0','página de aulas no ar desde 25/10'],
+ ['nut_quente',6,3,'anne','Nutrição quente → agente Elite','0','2 aulas em 7 d'],
+
+ ['hum_escal',7,2,'humano','Escalado para humano','38','23 disparos · 12 webinário · 3 nutrição'],
+ ['hum_card',7,3,'humano','Fila / card do vendedor','—','evento entra na Fase 1 (comercial v2 ligado em 26/10)'],
+
+ ['hubla_chk',3,6,'pagina','Checkout aberto (Hubla)','189','pessoas · 221 aberturas'],
+ ['matr',3,7.15,'resultado','MATRÍCULAS','74','R$ 69.084 · 1ª parcela paga'],
+];
+N[N.length-1].push(1); // marcador
+const E=[
+ // from,to,pessoas,pct,horas,cor
+ ['topo','topo_pub',null,null,null,'dash'],['topo_pub','web_meta',null,null,null,'dash'],['topo_pub','bl_meta',null,null,null,'dash'],
+ ['web_meta','web_pag',613,null,null,'grey'],
+ ['web_pag','web_entrou',477,78,0,'green'],['web_entrou','web_pitch',248,51,1,'green'],['web_pitch','web_clicou',121,48,0,'amber'],
+ ['web_clicou','hubla_chk',9,7,7,'red'],['web_clicou','matr',18,15,15,'amber'],
+ ['web_pag','web_anne',117,19,11,'grey'],['web_anne','web_link',117,79,4,'green'],['web_link','matr',9,7,22,'red'],
+ ['bl_meta','bl_vsl',147,null,null,'grey'],['bl_vsl','bl_regua',108,73,2,'green'],['bl_vsl','matr',21,14,29,'amber'],['bl_regua','matr',10,9,44,'red'],
+ ['car_aband','car_regua',38,16,4,'red'],['car_aband','matr',22,9,43,'red'],['car_regua','matr',5,12,97,'amber'],
+ ['disp_env','disp_resp',40,26,10,'amber'],['disp_rot','disp_resp',42,15,108,'red'],['disp_resp','disp_link',106,75,1,'green'],['disp_link','matr',16,12,31,'amber'],
+ ['disp_resp','hum_escal',23,16,null,'grey'],['hum_escal','matr',3,8,13,'red'],['hum_card','matr',4,null,null,'dash'],
+ ['desc_env','matr',11,0.3,79,'red'],
+ ['org_isca','nut_grupo',14,56,0,'green'],['nut_grupo','nut_aula',0,0,null,'red'],['nut_aula','nut_quente',0,null,null,'dash'],['nut_grupo','matr',1,2,169,'red'],
+ ['hubla_chk','matr',19,10,30,'amber'],
+];
+const cv=document.getElementById('canvas'), svg=document.getElementById('fios');
+lanes.forEach((l,i)=>{const d=document.createElement('div');d.className='lane';d.style.top=(Y0-28+i*DY)+'px';d.innerHTML=`<div class="rot">${l[0]}<b>${l[1]}</b></div>`;cv.appendChild(d)});
+const pos={};
+N.forEach(n=>{const [id,lane,col,tipo,tit,val,sub,res]=n; const d=document.createElement('div'); d.className='no '+tipo+(val==='0'||val==='—'?' vazio':''); d.id='n-'+id;
+ const x=X0+col*DX, y=Y0+lane*DY; d.style.left=x+'px'; d.style.top=y+'px';
+ const icon={fonte:'🎯',pagina:'📄',evento:'⚡',anne:'💬',humano:'☎️',resultado:'🏆',saida:'🚪'}[tipo];
+ d.innerHTML=`<div class="t">${icon} ${tipo}</div><div class="n">${tit}</div><div class="v">${val}</div>${sub?`<div class="s">${sub}</div>`:''}`;
+ cv.appendChild(d); pos[id]={x,y,w:tipo==='resultado'?200:176,h:d.offsetHeight||70,el:d};});
+// resultado: detalhe por fechamento e funil
+const m=pos['matr'].el; m.innerHTML+=`<div class="s" style="margin-top:6px;border-top:1px solid var(--line);padding-top:5px;line-height:1.5">
+ fechamento: <b style="color:var(--purple)">Anne 32</b> · <b style="color:var(--gold)">humano 4</b> · sozinho 38<br>
+ último funil: disparo 26 · webinário 23 · blindado 7 · carrinho 6 · desconto 2 · orgânico 1 · <span title="sem evento nos 7 dias antes da compra">direto 9</span><br>
+ 1º toque: Meta 29 · IG orgânico 7 · YouTube 7 · site 9 · WhatsApp 8</div>`;
+pos['matr'].h=m.offsetHeight;
+// setas
+const NS='http://www.w3.org/2000/svg'; const defs=document.createElementNS(NS,'defs'); svg.appendChild(defs);
+const cores={green:'#6fe08c',amber:'#ef9a3c',red:'#e06f6f',grey:'#5f7368',dash:'#5f7368'};
+for(const k in cores){const mk=document.createElementNS(NS,'marker');mk.setAttribute('id','m-'+k);mk.setAttribute('viewBox','0 0 10 10');mk.setAttribute('refX','9');mk.setAttribute('refY','5');mk.setAttribute('markerWidth','7');mk.setAttribute('markerHeight','7');mk.setAttribute('orient','auto-start-reverse');const p=document.createElementNS(NS,'path');p.setAttribute('d','M0,1 L9,5 L0,9 z');p.setAttribute('fill',cores[k]);mk.appendChild(p);defs.appendChild(mk)}
+const edgeEls=[]; const entradas={}; // quantas setas já entraram em cada nó (para escalonar o ponto de entrada)
+const bez=(t,p0,p1,p2,p3)=>{const u=1-t;return u*u*u*p0+3*u*u*t*p1+3*u*t*t*p2+t*t*t*p3};
+E.forEach(e=>{const [a,b,n,pct,h,cor]=e; const A=pos[a],B=pos[b]; if(!A||!B) return;
+ const k=(entradas[b]=(entradas[b]??0)+1); const longa=(B.x-A.x)>DX*1.5;
+ const x1=A.x+A.w, y1=A.y+Math.min(A.h,90)/2, x2=B.x, y2=B.y+14+(k-1)*11;
+ const dx=Math.max(60,(x2-x1)/2); const d=`M${x1},${y1} C${x1+dx},${y1} ${x2-dx},${y2} ${x2},${y2}`;
+ const p=document.createElementNS(NS,'path'); p.setAttribute('d',d); p.setAttribute('fill','none'); p.setAttribute('stroke',cores[cor]);
+ const w=n?Math.max(1.2,Math.min(9,1+Math.log10(n+1)*2.2)):1.2; p.setAttribute('stroke-width',w); p.setAttribute('opacity',cor==='dash'?.55:(longa?.5:.85));
+ if(cor==='dash') p.setAttribute('stroke-dasharray','6 5'); p.setAttribute('marker-end',`url(#m-${cor})`); svg.appendChild(p);
+ let lab=null;
+ if(n!=null){lab=document.createElement('div'); lab.className='rotulo '+cor;
+  const t=longa?[0.3,0.5,0.7,0.4,0.6,0.35,0.65,0.45,0.55][(k-1)%9]:0.5;   // setas longas: rótulo espalhado ao longo da curva
+  const mx=bez(t,x1,x1+dx,x2-dx,x2), my=bez(t,y1,y1,y2,y2);
+  lab.style.left=mx+'px'; lab.style.top=my+'px';
+  lab.innerHTML=`<b>${n.toLocaleString('pt-BR')}</b>${pct!=null?` <span>· ${String(pct).replace('.',',')}%</span>`:''}${h!=null?` <small>· ${h} h</small>`:''}`;
+  lab.title=`${n} pessoas de ${a} para ${b}`+(pct!=null?` (${pct}% do nó de origem)`:'')+(h!=null?` · ${h} h em média`:''); cv.appendChild(lab)}
+ edgeEls.push({a,b,p,lab});});
+// notas
+const notas=[[X0+3*DX+20,Y0-10,'<b>Onde o TJ-AM perde em outubro</b><br>1) 189 checkouts abertos → 19 pagos (10%)<br>2) 245 carrinhos → só 38 na régua (16%)<br>3) 483 na aula → 252 no pitch (51%)<br>4) desconto: 3.457 disparos → 11 matrículas'],
+ [X0+5*DX+10,Y0-10,'<b>Como ler</b><br>Cada nó mostra pessoas únicas no período. A seta mostra quem passou de um nó ao outro, então a soma das setas que saem não precisa bater com o nó (a mesma pessoa pode seguir dois caminhos, ou nenhum).']];
+notas.forEach(([x,y,html])=>{const d=document.createElement('div');d.className='nota';d.style.left=x+'px';d.style.top=y+'px';d.innerHTML=html;cv.appendChild(d)});
+// interação: destacar caminhos do nó
+let sel=null;
+N.forEach(n=>{pos[n[0]].el.addEventListener('click',()=>{sel=sel===n[0]?null:n[0];
+ Object.values(pos).forEach(p=>{p.el.classList.toggle('sel',false);p.el.classList.toggle('apagado',false)});
+ edgeEls.forEach(e=>{e.p.style.opacity='';if(e.lab)e.lab.style.opacity=''});
+ if(!sel) return; const liga=new Set([sel]); edgeEls.forEach(e=>{if(e.a===sel||e.b===sel){liga.add(e.a);liga.add(e.b)}});
+ Object.entries(pos).forEach(([id,p])=>{p.el.classList.toggle('sel',id===sel);p.el.classList.toggle('apagado',!liga.has(id))});
+ edgeEls.forEach(e=>{const on=e.a===sel||e.b===sel; e.p.style.opacity=on?1:.08; if(e.lab)e.lab.style.opacity=on?1:.1});});});
+// camadas e zoom
+document.querySelectorAll('.camadas button[data-m]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.camadas button').forEach(x=>x.classList.remove('on'));b.classList.add('on');document.body.classList.toggle('modo-mapa',b.dataset.m==='mapa')}));
+const z=document.getElementById('zoom'); const aplicaZoom=()=>{cv.style.transform=`scale(${z.value/100})`;cv.parentElement.style.height='calc(100vh - 58px)'}; z.addEventListener('input',aplicaZoom); aplicaZoom();
+</script>
+</body></html>
