@@ -49,7 +49,8 @@ export function calcular(doc, params) {
   }
   // setas que saem de fontes pagas (sem taxa) = pessoas do destino direto
   for (const e of edges) { const k = e.from + '>' + e.to; if (setas[k] == null && byId[e.from]?.bind?.k === 'gasto') setas[k] = nos[e.to] ?? 0 }
-  const res = doc.nodes.find(n => n.bind?.k === 'vendas')
+  // nó de resultado = o de vendas SEM filtro (total da conta); se só houver filtrados, o primeiro
+  const res = doc.nodes.find(n => n.bind?.k === 'vendas' && !n.bind?.funis?.length && !n.bind?.fechamento) || doc.nodes.find(n => n.bind?.k === 'vendas')
   const matriculas = res ? Math.round((nos[res.id] || 0) * 10) / 10 : 0
   const receita = Math.round(matriculas * Number(params.ticket || 0))
   const kpis = { matriculas: Math.round(matriculas), matriculas_exato: matriculas, receita, gasto: Math.round(gasto), cpa: matriculas > 0 ? Math.round(gasto / matriculas) : null, roas: gasto > 0 ? Math.round(receita / gasto * 100) / 100 : null }

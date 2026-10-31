@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ReactFlow, Background, Controls, MiniMap, useReactFlow, ReactFlowProvider } from '@xyflow/react'
+import { ReactFlow, Background, Controls, useReactFlow, ReactFlowProvider } from '@xyflow/react'
 import { toPng } from 'html-to-image'
 import { api, post, Q, K } from './api.js'
 import { PERIODOS, periodo, anterior, ddmm, dhm, nf } from './periodo.js'
@@ -53,6 +53,7 @@ function Mapa() {
   const [prev, setPrev] = useState(null)              // {base, salvas:{cen:row}, meta, status}
   const [paramsAll, setParamsAll] = useState(null)    // {base, otimista, pessimista}
   const [statusMes, setStatusMes] = useState(null)    // alerta do mês vigente (qualquer camada)
+  const [painelAberto, setPainelAberto] = useState(true)   // aba lateral (Editar/Previsão): clique no canvas recolhe, puxador reabre
   // ---- tema claro/escuro (31/10): ?tema=light|dark na URL > escolha guardada no navegador > escuro
   const [tema, setTema] = useState(() => { const q = Q.get('tema'); if (q === 'light' || q === 'dark') return q; try { const g = localStorage.getItem('mapa_tema'); if (g === 'light' || g === 'dark') return g } catch {} return 'dark' })
   useEffect(() => { document.documentElement.dataset.theme = tema; try { localStorage.setItem('mapa_tema', tema) } catch {} }, [tema])
@@ -138,7 +139,7 @@ function Mapa() {
       return { id: e.from + '>' + e.to, source: e.from, target: e.to, sourceHandle: 's', targetHandle: 't' + (editar ? 0 : k % 9), type: 'seta',
         data: { e: ee, cor: corSeta(ee, b), k, longa, tema, apagado: editar ? selSeta ? false : (sel ? apagado : false) : apagado, comparar, antPct: ant?.setas?.[e.from + '>' + e.to]?.pct,
           prevTaxa: calc && e.estilo !== 'dash' && a?.bind?.k !== 'gasto' ? params?.taxas?.[e.from + '>' + e.to] : undefined, prevN: calc ? calc.setas?.[e.from + '>' + e.to] : undefined,
-          onClick: () => (editar || camada === 'previsao') ? setSel({ tipo: 'seta', de: e.from, para: e.to }) : abrirSeta(e) } }
+          onClick: () => { if (editar || camada === 'previsao') { setSel({ tipo: 'seta', de: e.from, para: e.to }); setPainelAberto(true) } else abrirSeta(e) } } }
     })
     return { nodes: [...raias, ...nos], edges: setas }
   }, [doc, nums, ant, sel, comparar, editar, calc, params, camada, prevMes, ritmoMes, tema])
@@ -256,8 +257,8 @@ function Mapa() {
         <select value={pTipo} onChange={e => setPTipo(e.target.value)} title="Período">{PERIODOS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
         {pTipo === 'custom' && <><input type="date" value={custom.ini} onChange={e => setCustom(c => ({ ...c, ini: e.target.value }))} /><input type="date" value={custom.fim} onChange={e => setCustom(c => ({ ...c, fim: e.target.value }))} /></>}
         <button className={comparar ? 'on' : ''} onClick={() => setComparar(v => !v)} title="Variação contra o período anterior de mesmo tamanho">± anterior</button>
-        <div className="camadas"><button className={camada === 'real' ? 'on' : ''} onClick={() => { setCamada('real'); setSel(null) }}>Real</button><button className={camada === 'mapa' ? 'on' : ''} onClick={() => { setCamada('mapa'); setSel(null) }}>Só o mapa</button><button className={camada === 'previsao' ? 'on' : ''} onClick={() => { setCamada('previsao'); setEditar(false); setSel(null); setDetalhe(null) }} title="Taxas e verba por cenário, real × previsto, meta do mês">Previsão</button></div>
-        {papel === 'admin' && <button className={editar ? 'on' : ''} onClick={() => { if (editar && sujo && !window.confirm('Sair da edição e descartar as alterações não salvas?')) return; if (editar) { carregar() } setEditar(v => !v); setSel(null); setDetalhe(null) }} title="Edita este desenho: arrastar, criar nós e setas, vincular dados">✎ Editar</button>}
+        <div className="camadas"><button className={camada === 'real' ? 'on' : ''} onClick={() => { setCamada('real'); setSel(null) }}>Real</button><button className={camada === 'mapa' ? 'on' : ''} onClick={() => { setCamada('mapa'); setSel(null) }}>Só o mapa</button><button className={camada === 'previsao' ? 'on' : ''} onClick={() => { setCamada('previsao'); setEditar(false); setSel(null); setDetalhe(null); setPainelAberto(true) }} title="Taxas e verba por cenário, real × previsto, meta do mês">Previsão</button></div>
+        {papel === 'admin' && <button className={editar ? 'on' : ''} onClick={() => { if (editar && sujo && !window.confirm('Sair da edição e descartar as alterações não salvas?')) return; if (editar) { carregar() } setEditar(v => !v); setSel(null); setDetalhe(null); setPainelAberto(true) }} title="Edita este desenho: arrastar, criar nós e setas, vincular dados">✎ Editar</button>}
         <button onClick={() => carregar(true)} title="Recalcula agora (ignora o cache do dia)" disabled={editar}>↻ Recalcular</button>
         <button onClick={exportar} title="Baixa a imagem do mapa">⬇ PNG</button>
         <button className="tema-btn" onClick={() => setTema(t => t === 'dark' ? 'light' : 'dark')} title={tema === 'dark' ? 'Mudar para o tema claro' : 'Mudar para o tema escuro'}>{tema === 'dark' ? '☀️' : '🌙'}</button>
@@ -269,7 +270,7 @@ function Mapa() {
           <div className="kpi"><b style={{ color: 'var(--gold)' }}>{calc.kpis.cpa != null ? 'R$ ' + nf(calc.kpis.cpa) : '—'}</b><span>CPA</span></div>
         </div>}
         {k && camada !== 'previsao' && <div className="kpis" title={k.filtro?.funis?.length || k.filtro?.fechamento ? `Números só deste funil (último funil: ${(k.filtro.funis || []).join('/') || '—'}${k.filtro.fechamento ? ', fechamento ' + k.filtro.fechamento : ''}). A conta inteira teve ${nf(k.matriculas_conta)} matrículas no período.` : 'Números da conta inteira no período'}>
-          <div className="kpi"><b>{nf(k.matriculas)}{D(k.matriculas, kA?.matriculas)}</b><span>{k.filtro?.funis?.length || k.filtro?.fechamento ? `matr. do funil · conta ${nf(k.matriculas_conta)}` : 'matrículas'}</span></div>
+          <div className="kpi"><b>{nf(k.matriculas)}{(k.filtro?.funis?.length || k.filtro?.fechamento) && k.matriculas_conta > 0 && <small style={{ color: 'var(--gold)', fontWeight: 700 }}>{Math.round(k.matriculas / k.matriculas_conta * 100)}%</small>}{D(k.matriculas, kA?.matriculas)}</b><span>{k.filtro?.funis?.length || k.filtro?.fechamento ? `matr. do funil · ${Math.round(k.matriculas / (k.matriculas_conta || 1) * 100)}% das ${nf(k.matriculas_conta)} da conta` : 'matrículas'}</span></div>
           <div className="kpi"><b>R$ {nf(k.receita)}{D(k.receita, kA?.receita)}</b><span>receita</span></div>
           <div className="kpi"><b>R$ {nf(k.gasto)}{D(k.gasto, kA?.gasto)}</b><span>{k.filtro?.funis?.length ? 'mídia do funil' : 'mídia ×1,1383'}</span></div>
           <div className="kpi"><b>{k.roas != null ? String(k.roas).replace('.', ',') + '×' : '—'}{D(k.roas, kA?.roas, true)}</b><span>ROAS</span></div>
@@ -295,19 +296,20 @@ function Mapa() {
           <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} edgeTypes={edgeTypes} minZoom={0.15} maxZoom={2} fitView proOptions={{ hideAttribution: true }}
             nodesDraggable={editar} nodesConnectable={editar} elementsSelectable={false} panOnScroll zoomOnScroll={false}
             onNodesChange={onNodesChange} onNodeDragStop={onNodeDragStop} onConnect={onConnect}
-            onNodeClick={(_, n) => { if (n.type !== 'no') return; (editar || camada === 'previsao') ? setSel({ tipo: 'no', id: n.id }) : abrirNo(n.data.n) }} onPaneClick={() => { setSel(null); setDetalhe(null) }}>
+            onNodeClick={(_, n) => { if (n.type === 'raia') { setSel(null); setDetalhe(null); if (editar || camada === 'previsao') setPainelAberto(false); return } if (n.type !== 'no') return; if (editar || camada === 'previsao') { setSel({ tipo: 'no', id: n.id }); setPainelAberto(true) } else abrirNo(n.data.n) }} onPaneClick={() => { setSel(null); setDetalhe(null); if (editar || camada === 'previsao') setPainelAberto(false) }}>
             <Background color={P.pontos} gap={22} size={1} />
             <Controls showInteractive={false} />
-            <MiniMap pannable zoomable nodeColor={n => n.type === 'raia' ? 'transparent' : P.minimapNo} maskColor={P.minimapMask} />
           </ReactFlow>
-          <div className="legenda">
-            <i style={{ background: P.STRIPE.fonte }} />fonte <i style={{ background: P.STRIPE.pagina }} />página <i style={{ background: P.STRIPE.evento }} />evento <i style={{ background: P.STRIPE.anne }} />Anne <i style={{ background: P.STRIPE.humano }} />humano <i style={{ background: P.STRIPE.resultado }} />resultado<br />
-            Seta = pessoas que passaram de um nó ao outro em até {nums?.janela_dias ?? 30} dias · <b style={{ color: 'var(--green)' }}>%</b> <b style={{ color: 'var(--amber)' }}>%</b> <b style={{ color: 'var(--red)' }}>%</b> cores por faixa (provisórias até a Previsão) · largura ∝ volume · clique no nó ou no número da seta para ver quem passou.
-          </div>
           {toast && <div className="toast">{toast}</div>}
         </div>
-        {camada === 'previsao' && doc && params && <Previsao doc={doc} prev={prev} cenario={cenario} setCenario={setCenario} params={params} setParams={setParams} calc={calc} status={prev?.status} meta={prev?.meta} mes={prevMes} setMes={setPrevMes} mesesOpcoes={mesesOpcoes} sel={sel} onSel={setSel} acoes={acoesPrev} ocupado={ocupado} papel={papel} />}
-        {editar && doc && <Editor doc={doc} sel={sel} catalogo={catalogo} papel={papel} mapaId={mapaId} sujo={sujo} ocupado={ocupado} versoes={versoes} onDoc={marcar} onSel={setSel} acoes={acoes} />}
+        {(editar || camada === 'previsao') && doc && !painelAberto && (
+          <button className="puxador" onClick={() => setPainelAberto(true)} title="Abrir a aba lateral">◀ {editar ? 'Editar' : 'Previsão'}</button>
+        )}
+        {(editar || camada === 'previsao') && doc && painelAberto && (
+          <button className="recolher" onClick={() => setPainelAberto(false)} title="Recolher a aba lateral (clicar no fundo do mapa também recolhe)">▶</button>
+        )}
+        {camada === 'previsao' && painelAberto && doc && params && <Previsao doc={doc} prev={prev} cenario={cenario} setCenario={setCenario} params={params} setParams={setParams} calc={calc} status={prev?.status} meta={prev?.meta} mes={prevMes} setMes={setPrevMes} mesesOpcoes={mesesOpcoes} sel={sel} onSel={setSel} acoes={acoesPrev} ocupado={ocupado} papel={papel} />}
+        {editar && painelAberto && doc && <Editor doc={doc} sel={sel} catalogo={catalogo} papel={papel} mapaId={mapaId} sujo={sujo} ocupado={ocupado} versoes={versoes} onDoc={marcar} onSel={setSel} acoes={acoes} />}
         {!editar && camada !== 'previsao' && sel && <Detalhe d={detalhe} carregando={detCarregando} titulo={sel.titulo} onClose={() => { setSel(null); setDetalhe(null) }} />}
       </div>
     </div>

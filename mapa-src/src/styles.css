@@ -94,3 +94,13 @@ td{padding:4px 6px;border-bottom:1px solid rgba(31,51,42,.6);white-space:nowrap;
 :root[data-theme="light"] .no.apagado{opacity:.3}
 :root[data-theme="light"] ::-webkit-scrollbar-thumb{background:#c9d3cd}
 .tema-btn{min-width:38px}
+
+/* aba lateral recolhível (31/10) */
+.corpo{position:relative}
+.puxador{position:absolute;right:0;top:50%;transform:translateY(-50%);z-index:6;writing-mode:vertical-rl;text-orientation:mixed;padding:12px 6px;border-radius:10px 0 0 10px;border-right:0;background:var(--gold);color:var(--on-gold);font-weight:600;font-size:12px;letter-spacing:.3px}
+.puxador:hover{filter:brightness(1.08)}
+.recolher{position:absolute;right:400px;top:50%;transform:translate(50%,-50%);z-index:7;width:26px;height:44px;padding:0;border-radius:8px 0 0 8px;background:var(--panel);border:1px solid var(--line);color:var(--dim);font-size:11px}
+@media(max-width:1000px){.recolher{right:46vw}}
+
+/* as raias cobrem o fundo: deixam o clique passar para o canvas (recolher a aba, limpar seleção) */
+.react-flow__node-raia{pointer-events:none!important}
