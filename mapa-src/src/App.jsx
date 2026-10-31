@@ -3,7 +3,7 @@ import { ReactFlow, Background, Controls, MiniMap, useReactFlow, ReactFlowProvid
 import { toPng } from 'html-to-image'
 import { api, post, Q, K } from './api.js'
 import { PERIODOS, periodo, anterior, ddmm, dhm, nf } from './periodo.js'
-import { CORES, corSeta, valorNo } from './regras.js'
+import { PALETAS, paleta, corSeta, valorNo } from './regras.js'
 import NoFunil from './NoFunil.jsx'
 import Raia from './Raia.jsx'
 import SetaFluxo from './SetaFluxo.jsx'
@@ -53,6 +53,10 @@ function Mapa() {
   const [prev, setPrev] = useState(null)              // {base, salvas:{cen:row}, meta, status}
   const [paramsAll, setParamsAll] = useState(null)    // {base, otimista, pessimista}
   const [statusMes, setStatusMes] = useState(null)    // alerta do mês vigente (qualquer camada)
+  // ---- tema claro/escuro (31/10): ?tema=light|dark na URL > escolha guardada no navegador > escuro
+  const [tema, setTema] = useState(() => { const q = Q.get('tema'); if (q === 'light' || q === 'dark') return q; try { const g = localStorage.getItem('mapa_tema'); if (g === 'light' || g === 'dark') return g } catch {} return 'dark' })
+  useEffect(() => { document.documentElement.dataset.theme = tema; try { localStorage.setItem('mapa_tema', tema) } catch {} }, [tema])
+  const P = paleta(tema)
   const wrap = useRef(null)
   const per = useMemo(() => periodo(pTipo, custom.ini, custom.fim), [pTipo, custom])
   const papel = lista?.papel || 'leitura'
@@ -123,7 +127,7 @@ function Mapa() {
       const v = calc.nos?.[n.id]; return { texto: v != null ? nf(Math.round(v)) : '—', num: v }
     }
     const nos = doc.nodes.map(n => ({ id: n.id, type: 'no', position: n.pos || { x: X0 + (n.col || 0) * DX, y: (laneIdx[n.lane] ?? 0) * DY + 34 }, draggable: editar,
-      data: { n: { ...n, valor: val(n.id) }, ant: ant?.valores?.[n.id], comparar, previsao: prevDe(n), ritmo: prevMes === mesAtual ? ritmoMes : null, sel: sel?.tipo === 'no' && sel.id === n.id, apagado: !editar && sel?.tipo === 'no' && !ligados.has(n.id) } }))
+      data: { n: { ...n, valor: val(n.id) }, ant: ant?.valores?.[n.id], comparar, tema, previsao: prevDe(n), ritmo: prevMes === mesAtual ? ritmoMes : null, sel: sel?.tipo === 'no' && sel.id === n.id, apagado: !editar && sel?.tipo === 'no' && !ligados.has(n.id) } }))
     const entradas = {}
     const setas = doc.edges.map((e, i) => {
       const k = (entradas[e.to] = (entradas[e.to] ?? 0) + 1) - 1
@@ -132,12 +136,12 @@ function Mapa() {
       const selSeta = sel?.tipo === 'seta' && sel.de === e.from && sel.para === e.to
       const apagado = sel?.tipo === 'no' ? !(e.from === sel.id || e.to === sel.id) : sel?.tipo === 'seta' ? !selSeta : false
       return { id: e.from + '>' + e.to, source: e.from, target: e.to, sourceHandle: 's', targetHandle: 't' + (editar ? 0 : k % 9), type: 'seta',
-        data: { e: ee, cor: corSeta(ee, b), k, longa, apagado: editar ? selSeta ? false : (sel ? apagado : false) : apagado, comparar, antPct: ant?.setas?.[e.from + '>' + e.to]?.pct,
+        data: { e: ee, cor: corSeta(ee, b), k, longa, tema, apagado: editar ? selSeta ? false : (sel ? apagado : false) : apagado, comparar, antPct: ant?.setas?.[e.from + '>' + e.to]?.pct,
           prevTaxa: calc && e.estilo !== 'dash' && a?.bind?.k !== 'gasto' ? params?.taxas?.[e.from + '>' + e.to] : undefined, prevN: calc ? calc.setas?.[e.from + '>' + e.to] : undefined,
           onClick: () => (editar || camada === 'previsao') ? setSel({ tipo: 'seta', de: e.from, para: e.to }) : abrirSeta(e) } }
     })
     return { nodes: [...raias, ...nos], edges: setas }
-  }, [doc, nums, ant, sel, comparar, editar, calc, params, camada, prevMes, ritmoMes])
+  }, [doc, nums, ant, sel, comparar, editar, calc, params, camada, prevMes, ritmoMes, tema])
 
   // ---- leitura: aprofundamento ----
   const baseDet = () => mapaId ? { m: conta, id: mapaId } : { m: conta, t: template }
@@ -229,7 +233,7 @@ function Mapa() {
   const mesesOpcoes = useMemo(() => { const out = []; const [y, m] = mesAtual.split('-').map(Number); for (let i = -1; i <= 2; i++) { const d = new Date(Date.UTC(y, m - 1 + i, 1)); const v = d.toISOString().slice(0, 10); out.push({ v, l: d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric', timeZone: 'UTC' }) }) } return out }, [mesAtual])
   const exportar = async () => {
     const el = wrap.current?.querySelector('.react-flow'); if (!el) return
-    const png = await toPng(el, { backgroundColor: '#0b1512', pixelRatio: 2, filter: x => !(x.classList && (x.classList.contains('react-flow__minimap') || x.classList.contains('react-flow__controls') || x.classList.contains('legenda'))) })
+    const png = await toPng(el, { backgroundColor: P.fundo, pixelRatio: 2, filter: x => !(x.classList && (x.classList.contains('react-flow__minimap') || x.classList.contains('react-flow__controls') || x.classList.contains('legenda'))) })
     const a = document.createElement('a'); a.download = `mapa-${conta}-${mapaId || template}-${per.ini}_${per.fim}.png`; a.href = png; a.click()
   }
   const k = nums?.kpis, kA = ant?.kpis
@@ -256,6 +260,7 @@ function Mapa() {
         {papel === 'admin' && <button className={editar ? 'on' : ''} onClick={() => { if (editar && sujo && !window.confirm('Sair da edição e descartar as alterações não salvas?')) return; if (editar) { carregar() } setEditar(v => !v); setSel(null); setDetalhe(null) }} title="Edita este desenho: arrastar, criar nós e setas, vincular dados">✎ Editar</button>}
         <button onClick={() => carregar(true)} title="Recalcula agora (ignora o cache do dia)" disabled={editar}>↻ Recalcular</button>
         <button onClick={exportar} title="Baixa a imagem do mapa">⬇ PNG</button>
+        <button className="tema-btn" onClick={() => setTema(t => t === 'dark' ? 'light' : 'dark')} title={tema === 'dark' ? 'Mudar para o tema claro' : 'Mudar para o tema escuro'}>{tema === 'dark' ? '☀️' : '🌙'}</button>
         {camada === 'previsao' && calc && <div className="kpis" style={{ borderLeft: '2px solid var(--gold)', paddingLeft: 8 }}>
           <div className="kpi"><b style={{ color: 'var(--gold)' }}>{nf(calc.kpis.matriculas)}</b><span>previsto · matrículas</span></div>
           <div className="kpi"><b style={{ color: 'var(--gold)' }}>R$ {nf(calc.kpis.receita)}</b><span>receita</span></div>
@@ -285,18 +290,18 @@ function Mapa() {
           {erro && <div className="erro" onClick={() => setErro('')}>⚠ {erro}</div>}
           {(carregando || ocupado) && <div className="carregando">{ocupado ? 'Gravando…' : 'Calculando o mapa…'}</div>}
           <svg width="0" height="0" style={{ position: 'absolute' }}><defs>
-            {Object.entries(CORES).map(([c, cor]) => <marker key={c} id={'m-' + c} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill={cor} /></marker>)}
+            {Object.entries(PALETAS).flatMap(([t, pal]) => Object.entries(pal.CORES).map(([c, cor]) => <marker key={t + c} id={`m-${c}-${t}`} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill={cor} /></marker>))}
           </defs></svg>
           <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} edgeTypes={edgeTypes} minZoom={0.15} maxZoom={2} fitView proOptions={{ hideAttribution: true }}
             nodesDraggable={editar} nodesConnectable={editar} elementsSelectable={false} panOnScroll zoomOnScroll={false}
             onNodesChange={onNodesChange} onNodeDragStop={onNodeDragStop} onConnect={onConnect}
             onNodeClick={(_, n) => { if (n.type !== 'no') return; (editar || camada === 'previsao') ? setSel({ tipo: 'no', id: n.id }) : abrirNo(n.data.n) }} onPaneClick={() => { setSel(null); setDetalhe(null) }}>
-            <Background color="rgba(138,163,150,.18)" gap={22} size={1} />
+            <Background color={P.pontos} gap={22} size={1} />
             <Controls showInteractive={false} />
-            <MiniMap pannable zoomable nodeColor={n => n.type === 'raia' ? 'transparent' : '#2b4638'} maskColor="rgba(11,21,18,.7)" />
+            <MiniMap pannable zoomable nodeColor={n => n.type === 'raia' ? 'transparent' : P.minimapNo} maskColor={P.minimapMask} />
           </ReactFlow>
           <div className="legenda">
-            <i style={{ background: '#6fb3e0' }} />fonte <i style={{ background: '#8aa396' }} />página <i style={{ background: '#35d0ba' }} />evento <i style={{ background: '#b89cff' }} />Anne <i style={{ background: '#f5b942' }} />humano <i style={{ background: '#6fe08c' }} />resultado<br />
+            <i style={{ background: P.STRIPE.fonte }} />fonte <i style={{ background: P.STRIPE.pagina }} />página <i style={{ background: P.STRIPE.evento }} />evento <i style={{ background: P.STRIPE.anne }} />Anne <i style={{ background: P.STRIPE.humano }} />humano <i style={{ background: P.STRIPE.resultado }} />resultado<br />
             Seta = pessoas que passaram de um nó ao outro em até {nums?.janela_dias ?? 30} dias · <b style={{ color: 'var(--green)' }}>%</b> <b style={{ color: 'var(--amber)' }}>%</b> <b style={{ color: 'var(--red)' }}>%</b> cores por faixa (provisórias até a Previsão) · largura ∝ volume · clique no nó ou no número da seta para ver quem passou.
           </div>
           {toast && <div className="toast">{toast}</div>}

@@ -330,9 +330,9 @@ async function vFilas(){
 async function vMapa(){
   $("lMent").style.display = "none";
   const m = ($("ment") && $("ment").value) || "TJAM";   // mentoria escolhida no seletor da aba Mentoria
-  const url = "mapa/?k=" + encodeURIComponent(K) + "&m=" + encodeURIComponent(m) + "&t=mestre&p=mes";
+  const url = "mapa/?k=" + encodeURIComponent(K) + "&m=" + encodeURIComponent(m) + "&t=mestre&p=mes&tema=light";   // o painel é claro: o mapa embutido abre claro (o botão ☀️/🌙 do mapa troca)
   $("status").innerHTML = `Mapa visual dos funis · <a href="${url}" target="_blank" rel="noopener">abrir em tela cheia ↗</a> · clique num nó ou no número de uma seta para ver quem passou`;
-  $("corpo").innerHTML = `<iframe src="${url}" style="width:100%;height:calc(100vh - 150px);min-height:640px;border:1px solid var(--line,#ddd);border-radius:12px;background:#0b1512"></iframe>`;
+  $("corpo").innerHTML = `<iframe src="${url}" style="width:100%;height:calc(100vh - 150px);min-height:640px;border:1px solid var(--line,#ddd);border-radius:12px;background:#f4f6f3"></iframe>`;
 }
 
 async function vLeitura(){

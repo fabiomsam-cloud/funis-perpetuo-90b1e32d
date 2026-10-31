@@ -1,6 +1,6 @@
 import React, { memo } from 'react'
 import { Handle, Position } from '@xyflow/react'
-import { ICONE, STRIPE, valorNo } from './regras.js'
+import { ICONE, paleta, valorNo } from './regras.js'
 import { nf } from './periodo.js'
 
 function Delta({ atual, ant }) {
@@ -10,7 +10,8 @@ function Delta({ atual, ant }) {
   return <small className={d > 0 ? 'up' : 'down'} title={`período anterior: ${nf(ant)}`}>{d > 0 ? '+' : ''}{nf(d)}{p != null ? ` (${p > 0 ? '+' : ''}${p}%)` : ''}</small>
 }
 export default memo(function NoFunil({ data }) {
-  const { n, sel, apagado, comparar, ant } = data
+  const { n, sel, apagado, comparar, ant, tema } = data
+  const STRIPE = paleta(tema).STRIPE
   const v = valorNo(n), va = ant ? valorNo({ ...n, valor: ant }) : null
   const k = n.bind?.k, val = n.valor || {}
   const cls = ['no', n.tipo, sel ? 'sel' : '', apagado ? 'apagado' : '', v.vazio && n.tipo !== 'nota' ? 'vazio' : ''].join(' ')
